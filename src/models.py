@@ -23,4 +23,3 @@ class MelodyTransformer(nn.Module):
         pass
 
     def forward(self):
-        pass
