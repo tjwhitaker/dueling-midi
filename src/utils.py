@@ -3,8 +3,11 @@ import numpy as np
 import pickle
 import os
 
+np.set_printoptions(threshold=np.inf)
 
 # Load or build pickled dataset of processed midi files
+
+
 def load_training_set():
     if os.path.exists("./dataset.pkl"):
         return pickle.load(open("dataset.pkl", "rb"))
@@ -35,7 +38,7 @@ def process_midi(file):
 
 # Remove empty space at the beginning and end of a piano roll
 def trim_piano_roll(roll):
-    rows, cols = roll.shape
+    _, cols = roll.shape
     strip_indexes = []
 
     for i in range(cols):
@@ -54,5 +57,17 @@ def trim_piano_roll(roll):
 
 
 # Process roll
-def encode_roll():
-    pass
+# One hot encode
+def encode_roll(roll):
+    pitches = []
+    velocities = []
+
+    _, cols = roll.shape
+    pitches = np.argmax(roll, axis=0)
+    velocities = [roll[pitches[i], i] for i in range(cols)]
+
+    return pitches, velocities
+
+
+test = process_midi("./data/001/001.mid")
+encode_roll(test)
