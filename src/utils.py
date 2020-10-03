@@ -31,9 +31,10 @@ def process_midi(file):
         if track.name == "MELODY":
             # Sixteenth notes
             roll = track.get_piano_roll(fs=track.get_end_time() / 16)
-            melody = trim_piano_roll(roll)
+            trimmed = trim_piano_roll(roll)
+            pitches, velocities = encode_roll(trimmed)
 
-    return melody
+    return {"pitches": pitches, "velocities": velocities}
 
 
 # Remove empty space at the beginning and end of a piano roll
@@ -57,17 +58,15 @@ def trim_piano_roll(roll):
 
 
 # Process roll
-# One hot encode
 def encode_roll(roll):
     pitches = []
     velocities = []
 
     _, cols = roll.shape
     pitches = np.argmax(roll, axis=0)
-    velocities = [roll[pitches[i], i] for i in range(cols)]
+    velocities = [int(roll[pitches[i], i]) for i in range(cols)]
 
     return pitches, velocities
 
 
-test = process_midi("./data/001/001.mid")
-encode_roll(test)
+load_training_set()
