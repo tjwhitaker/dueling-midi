@@ -3,42 +3,39 @@ import numpy as np
 import pickle
 import os
 
-np.set_printoptions(threshold=np.inf)
 
 # Load or build pickled dataset of processed midi files
-
-
-def load_training_set():
+def load_rolls():
     if os.path.exists("./dataset.pkl"):
         return pickle.load(open("dataset.pkl", "rb"))
     else:
-        data = []
+        rolls = []
 
         for i in range(909):
-            data.append(process_midi(f"./data/{(i+1):03}/{(i+1):03}.mid"))
+            roll = midi_to_roll(f"./data/{(i+1):03}/{(i+1):03}.mid")
+            rolls.append(roll)
 
         with open("dataset.pkl", "wb") as output:
-            pickle.dump(data, output)
+            pickle.dump(rolls, output)
 
-        return data
+        return rolls
 
 
 # Convert midi file to piano roll of the melody
-def process_midi(file):
+def midi_to_roll(file):
     midi_data = pretty_midi.PrettyMIDI(file)
 
     for track in midi_data.instruments:
         if track.name == "MELODY":
             # Sixteenth notes
             roll = track.get_piano_roll(fs=track.get_end_time() / 16)
-            trimmed = trim_piano_roll(roll)
-            pitches, velocities = encode_roll(trimmed)
+            trimmed = trim_roll(roll)
 
-    return {"pitches": pitches, "velocities": velocities}
+    return trimmed
 
 
 # Remove empty space at the beginning and end of a piano roll
-def trim_piano_roll(roll):
+def trim_roll(roll):
     _, cols = roll.shape
     strip_indexes = []
 
@@ -57,8 +54,8 @@ def trim_piano_roll(roll):
     return np.delete(roll, strip_indexes, axis=1)
 
 
-# Process roll
-def encode_roll(roll):
+# Convert piano roll to pitch and velocity sequences
+def split_roll(roll):
     pitches = []
     velocities = []
 
@@ -69,4 +66,14 @@ def encode_roll(roll):
     return pitches, velocities
 
 
-load_training_set()
+# Build batch of (input, target) tuples from sequence
+def sequence_to_batch(sequence, length):
+    batch = []
+
+    for i in range(len(sequence) - length):
+        inputs = sequence[i:i+length]
+        targets = sequence[i+1:i+1+length]
+
+        batch.append((inputs, targets))
+
+    return batch
