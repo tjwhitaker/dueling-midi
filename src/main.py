@@ -31,7 +31,7 @@ def train(model, data):
         loss.backward()
         optimizer.step()
 
-    print(f"Loss: {total_loss}")
+    print(f"Loss: {total_loss}\n")
 
 
 def generate_sample(model, initial_sequence):
@@ -85,6 +85,15 @@ for i in range(epochs):
     print("---------------------------")
     train(model, data)
 
+# Save model
+torch.save(model.state_dict(), "MelodyLSTM.model")
+
+# Load model just to test
+model = models.MelodyLSTM(num_pitches, num_pitches,
+                          hidden_size, hidden_layers).to(device)
+
+model.load_state_dict(torch.load("MelodyLSTM.model"))
+model.eval()
 
 initial_sequence = torch.tensor([[66]]).to(device)
 melody = generate_sample(model, initial_sequence)
