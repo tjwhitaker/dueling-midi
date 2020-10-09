@@ -5,7 +5,6 @@ import utils
 
 
 # Expects data to be a list of (input, target) tuples.
-# TODO: Batch data for training
 def train(model, data):
     total_loss = 0
 
@@ -56,7 +55,7 @@ def generate_sample(model, initial_sequence):
     return result
 
 
-epochs = 10
+epochs = 1
 sequence_length = 64
 batch_size = 1
 num_pitches = 128
@@ -72,10 +71,17 @@ batches = []
 
 for roll in rolls:
     pitches, velocities = utils.split_roll(roll)
-    batch = torch.tensor(utils.sequence_to_batch(pitches, sequence_length))
+    batch = utils.sequence_to_batch(pitches, sequence_length)
     batches.append(batch)
 
-data = batches[0].to(device)
+# Flatten list of lists of tuples to list of tuples
+# Size of data: torch.Size([2855383, 2, 64])
+data = torch.tensor(
+    [item for sublist in batches for item in sublist]).to(device)
+
+print(data.size())
+
+# data = batches[0].to(device)
 
 model = models.MelodyLSTM(num_pitches, num_pitches,
                           hidden_size, hidden_layers).to(device)
