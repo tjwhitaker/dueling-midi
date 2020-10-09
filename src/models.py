@@ -12,7 +12,8 @@ class MelodyLSTM(nn.Module):
         self.hidden_layers = hidden_layers
 
         self.embedding = nn.Embedding(input_size, input_size)
-        self.lstm = nn.LSTM(input_size, hidden_size, hidden_layers)
+        self.lstm = nn.LSTM(input_size, hidden_size,
+                            hidden_layers, batch_first=True)
         self.decoder = nn.Linear(hidden_size, output_size)
 
     def forward(self, input_sequence, hidden_state):

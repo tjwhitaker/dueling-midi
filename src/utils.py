@@ -21,7 +21,12 @@ def load_rolls():
         return rolls
 
 
+def load_paired_dataset():
+    pass
+
 # Convert midi file to piano roll of the melody
+
+
 def midi_to_roll(file):
     midi_data = pretty_midi.PrettyMIDI(file)
 

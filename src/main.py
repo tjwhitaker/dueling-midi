@@ -5,32 +5,66 @@ import utils
 
 
 # Expects data to be a list of (input, target) tuples.
-def train(model, data):
+class MelodyDataset(torch.utils.data.Dataset):
+    def __init__(self, data):
+        self.data = data
+
+    def __getitem__(self, index):
+        return self.data[index]
+
+    def __len__(self):
+        return len(self.data)
+
+
+def train(model, loader, device):
     total_loss = 0
 
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
 
-    # Batch size of 1
-    hidden_state = model.init_hidden(1)
+    for i, (inputs, targets) in enumerate(loader):
+        hidden_state = model.init_hidden(inputs.size()[0])
 
-    for inputs, targets in data:
-        # Add batch dimension (sequence_length, batch_size, feature_dim)
-        inputs = torch.unsqueeze(inputs, dim=1)
-        targets = torch.unsqueeze(targets, dim=1)
+        print(i, inputs.size(), targets.size())
 
-        hidden_state = tuple([each.data for each in hidden_state])
+        # Add feature dim (batch_size, sequence_length, feature_dim)
+        inputs = inputs.to(device)
+        targets = targets.to(device)
+
+        print(i, inputs.size(), targets.size())
 
         output, hidden_state = model(inputs, hidden_state)
 
-        loss = criterion(torch.squeeze(output), torch.squeeze(targets))
+        output = output.permute(0, 2, 1)
+
+        print(i, output.size(), targets.size())
+
+        loss = criterion(output, targets)
         total_loss += loss.item()
 
         model.zero_grad()
         loss.backward()
         optimizer.step()
 
-    print(f"Loss: {total_loss}\n")
+    print("Done")
+
+    # for inputs, targets in data:
+    #     # Add batch dimension (sequence_length, batch_size, feature_dim)
+    #     inputs = torch.unsqueeze(inputs, dim=1)
+    #     targets = torch.unsqueeze(targets, dim=1)
+
+    #     hidden_state = tuple([each.data for each in hidden_state])
+
+    #     output, hidden_state = model(inputs, hidden_state)
+
+    #     loss = criterion(torch.squeeze(output), torch.squeeze(targets))
+    #     total_loss += loss.item()
+
+    #     model.zero_grad()
+    #     loss.backward()
+    #     optimizer.step()
+
+    # print(f"Loss: {total_loss}\n")
 
 
 def generate_sample(model, initial_sequence):
@@ -39,7 +73,7 @@ def generate_sample(model, initial_sequence):
 
     hidden_state = model.init_hidden(batch_size)
 
-    # input_seq = torch.tensor([[66]]).to(device)
+    input_seq = torch.tensor([[66]]).to(device)
     result = []
 
     for _ in range(sequence_length):
@@ -76,10 +110,10 @@ for roll in rolls:
 
 # Flatten list of lists of tuples to list of tuples
 # Size of data: torch.Size([2855383, 2, 64])
-data = torch.tensor(
-    [item for sublist in batches for item in sublist]).to(device)
+data = [item for sublist in batches for item in sublist]
 
-print(data.size())
+training_set = MelodyDataset(data)
+training_loader = torch.utils.data.DataLoader(training_set, batch_size=32)
 
 # data = batches[0].to(device)
 
@@ -89,18 +123,19 @@ model = models.MelodyLSTM(num_pitches, num_pitches,
 for i in range(epochs):
     print(f"Epoch {i}")
     print("---------------------------")
-    train(model, data)
+    train(model, training_loader, device)
 
-# Save model
-torch.save(model.state_dict(), "MelodyLSTM.model")
+# # Save model
+# torch.save(model.state_dict(), "MelodyLSTM.model")
 
-# Load model just to test
-model = models.MelodyLSTM(num_pitches, num_pitches,
-                          hidden_size, hidden_layers).to(device)
+# # Load model just to test
+# model = models.MelodyLSTM(num_pitches, num_pitches,
+#                           hidden_size, hidden_layers).to(device)
 
-model.load_state_dict(torch.load("MelodyLSTM.model"))
-model.eval()
+# model.load_state_dict(torch.load("MelodyLSTM.model"))
+# model.eval()
 
-initial_sequence = torch.tensor([[66]]).to(device)
-melody = generate_sample(model, initial_sequence)
-print(melody)
+# initial_sequence = torch.tensor(
+#     [[66, 66, 66, 66, 0, 0, 0, 0, 66, 66, 66, 66]]).to(device)
+# melody = generate_sample(model, initial_sequence)
+# print(melody)
