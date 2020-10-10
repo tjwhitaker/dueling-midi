@@ -2,31 +2,10 @@ import pretty_midi
 import numpy as np
 import pickle
 import os
+import torch
 
-
-# Load or build pickled dataset of processed midi files
-def load_rolls():
-    if os.path.exists("./dataset.pkl"):
-        return pickle.load(open("dataset.pkl", "rb"))
-    else:
-        rolls = []
-
-        for i in range(909):
-            roll = midi_to_roll(f"./data/{(i+1):03}/{(i+1):03}.mid")
-            rolls.append(roll)
-
-        with open("dataset.pkl", "wb") as output:
-            pickle.dump(rolls, output)
-
-        return rolls
-
-
-def load_paired_dataset():
-    pass
 
 # Convert midi file to piano roll of the melody
-
-
 def midi_to_roll(file):
     midi_data = pretty_midi.PrettyMIDI(file)
 
@@ -99,3 +78,52 @@ def sequence_to_batch(sequence, length):
             break
 
     return batch
+
+
+def train(model, loader, epochs, device):
+    total_loss = 0
+
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
+
+    for _ in range(epochs):
+        for i, (inputs, targets) in enumerate(loader):
+            hidden_state = model.init_hidden(inputs.size()[0])
+
+            # (batch_size, sequence_length)
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+
+            output, hidden_state = model(inputs, hidden_state)
+
+            # Loss function expects (batch_size, feature_dim, sequence_length)
+            output = output.permute(0, 2, 1)
+
+            loss = criterion(output, targets)
+            total_loss += loss.item()
+
+            model.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        print(f"Loss: {total_loss}\n")
+
+
+def generate_melody(model, initial_sequence, sequence_length, device):
+    batch_size = 1
+
+    hidden_state = model.init_hidden(batch_size)
+
+    result = []
+
+    for _ in range(sequence_length):
+        output, hidden_state = model(initial_sequence, hidden_state)
+
+        output = torch.functional.F.softmax(torch.squeeze(output), dim=0)
+        dist = torch.distributions.Categorical(output)
+        index = dist.sample()
+
+        initial_sequence[0][0] = index.item()
+        result.append(index.item())
+
+    return result
