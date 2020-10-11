@@ -4,6 +4,7 @@ import models
 import utils
 import data
 import rtmidi
+import time
 
 sequence_length = 64
 num_pitches = 128
@@ -20,7 +21,7 @@ model.load_state_dict(torch.load("MelodyLSTM.model"))
 model.eval()
 
 training_set = data.get_training_set(sequence_length)
-input_sequence = torch.tensor(training_set[0][0]).to(device)
+input_sequence = torch.tensor(training_set[9][0]).to(device)
 
 
 # TODO: get input sequence (rtmidi)
@@ -55,6 +56,7 @@ for _ in range(sequence_length):
     input_note[0][0] = note.item()
     melody.append(note.item())
 
+print(training_set[0][0])
 print(melody)
 ##########################################
 
@@ -70,28 +72,45 @@ else:
     midiout.open_virtual_port("My virtual output")
 
 with midiout:
-    for note in training_set[0][0]:
+    prev_note = 0
+
+    for note in training_set[9][0]:
+        note_on = [0x90, note, 112]
+        note_off = [0x80, note, 0]
+        prev_note_off = [0x80, prev_note, 0]
+
         if note == 0:
             note_on = [0x90, note, 0]
-        else:
-            note_on = [0x90, note, 112]
 
-        note_off = [0x80, note, 0]
-        midiout.send_message(note_on)
-        time.sleep(0.1)
-        midiout.send_message(note_off)
-        time.sleep(0.1)
+        if note != prev_note:
+            midiout.send_message(prev_note_off)
+            time.sleep(0.05)
+            midiout.send_message(note_on)
+        else:
+            time.sleep(0.05)
+
+        prev_note = note
+
+    time.sleep(0.5)
+
+    prev_note = 0
 
     for note in melody:
-        if note == 0:
-            note_on = [0x90, note, 0]
-        else:
-            note_on = [0x90, note, 112]
-
+        note_on = [0x90, note, 112]
         note_off = [0x80, note, 0]
-        midiout.send_message(note_on)
-        time.sleep(0.1)
-        midiout.send_message(note_off)
-        time.sleep(0.1)
+        prev_note_off = [0x80, prev_note, 0]
 
+        if note_on == 0:
+            note_on = [0x90, note, 0]
+
+        if note != prev_note:
+            midiout.send_message(prev_note_off)
+            time.sleep(0.05)
+            midiout.send_message(note_on)
+        else:
+            time.sleep(0.05)
+
+        prev_note = note
+
+        
 del midiout
