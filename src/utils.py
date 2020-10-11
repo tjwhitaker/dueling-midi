@@ -56,74 +56,25 @@ def sequence_to_batch(sequence, length):
 
     # Build batch by sliding a window by 1 space.
     # Final batch size ~ 3m tuples at 64 1/16 notes
-    # for i in range(len(sequence) - length):
-    #     inputs = sequence[i:i+length]
-    #     targets = sequence[i+1:i+1+length]
-
-    #     batch.append((inputs, targets))
-
-    # Build batch by sliding the window by the sequence length
-    # Final batch size ~45k at 64 1/16 notes
-    ptr = 0
-
-    while True:
-        inputs = sequence[ptr: ptr+length]
-        targets = sequence[ptr+1: ptr+1+length]
+    for i in range(len(sequence) - length):
+        inputs = sequence[i:i+length]
+        targets = sequence[i+1:i+1+length]
 
         batch.append((inputs, targets))
 
-        ptr += length
+    # Build batch by sliding the window by the sequence length
+    # Final batch size ~45k at 64 1/16 notes
+    # ptr = 0
 
-        if ptr+length+1 > len(sequence):
-            break
+    # while True:
+    #     inputs = sequence[ptr: ptr+length]
+    #     targets = sequence[ptr+1: ptr+1+length]
+
+    #     batch.append((inputs, targets))
+
+    #     ptr += length
+
+    #     if ptr+length+1 > len(sequence):
+    #         break
 
     return batch
-
-
-def train(model, loader, epochs, device):
-    total_loss = 0
-
-    criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
-
-    for _ in range(epochs):
-        for i, (inputs, targets) in enumerate(loader):
-            hidden_state = model.init_hidden(inputs.size()[0])
-
-            # (batch_size, sequence_length)
-            inputs = inputs.to(device)
-            targets = targets.to(device)
-
-            output, hidden_state = model(inputs, hidden_state)
-
-            # Loss function expects (batch_size, feature_dim, sequence_length)
-            output = output.permute(0, 2, 1)
-
-            loss = criterion(output, targets)
-            total_loss += loss.item()
-
-            model.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-        print(f"Loss: {total_loss}\n")
-
-
-def generate_melody(model, initial_sequence, sequence_length, device):
-    batch_size = 1
-
-    hidden_state = model.init_hidden(batch_size)
-
-    result = []
-
-    for _ in range(sequence_length):
-        output, hidden_state = model(initial_sequence, hidden_state)
-
-        output = torch.functional.F.softmax(torch.squeeze(output), dim=0)
-        dist = torch.distributions.Categorical(output)
-        index = dist.sample()
-
-        initial_sequence[0][0] = index.item()
-        result.append(index.item())
-
-    return result
