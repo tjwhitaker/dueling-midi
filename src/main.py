@@ -3,6 +3,7 @@ import torch
 import models
 import utils
 import data
+import rtmidi
 
 sequence_length = 64
 num_pitches = 128
@@ -57,4 +58,40 @@ for _ in range(sequence_length):
 print(melody)
 ##########################################
 
-# TODO: Play send melody to midi device
+# TODO: Send melody to midi device
+midiout = rtmidi.MidiOut()
+available_ports = midiout.get_ports()
+
+print(available_ports)
+
+if available_ports:
+    midiout.open_port(5)
+else:
+    midiout.open_virtual_port("My virtual output")
+
+with midiout:
+    for note in training_set[0][0]:
+        if note == 0:
+            note_on = [0x90, note, 0]
+        else:
+            note_on = [0x90, note, 112]
+
+        note_off = [0x80, note, 0]
+        midiout.send_message(note_on)
+        time.sleep(0.1)
+        midiout.send_message(note_off)
+        time.sleep(0.1)
+
+    for note in melody:
+        if note == 0:
+            note_on = [0x90, note, 0]
+        else:
+            note_on = [0x90, note, 112]
+
+        note_off = [0x80, note, 0]
+        midiout.send_message(note_on)
+        time.sleep(0.1)
+        midiout.send_message(note_off)
+        time.sleep(0.1)
+
+del midiout
