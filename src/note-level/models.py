@@ -26,11 +26,3 @@ class MelodyLSTM(nn.Module):
     def init_hidden(self, batch_size):
         return (Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda(),
                 Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))
-
-
-class MelodyTransformer(nn.Module):
-    def __init__(self):
-        pass
-
-    def forward(self):
-        pass
