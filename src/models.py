@@ -30,7 +30,7 @@ class NoteLSTM(nn.Module):
 
 
 class NoteCNN(nn.Module):
-    def __init__(self, input_size=128, output_size=128, self.sequence_length):
+    def __init__(self, input_size=128, output_size=128, sequence_length=64):
         in_channels = 1
         self.input_size = input_size
         self.output_size = output_size
