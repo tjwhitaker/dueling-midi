@@ -72,45 +72,28 @@ else:
     midiout.open_virtual_port("My virtual output")
 
 with midiout:
-    prev_note = 0
-
-    for note in training_set[9][0]:
+    for note in input_sequence:
         note_on = [0x90, note, 112]
         note_off = [0x80, note, 0]
-        prev_note_off = [0x80, prev_note, 0]
 
         if note == 0:
             note_on = [0x90, note, 0]
 
-        if note != prev_note:
-            midiout.send_message(prev_note_off)
-            time.sleep(0.05)
-            midiout.send_message(note_on)
-        else:
-            time.sleep(0.05)
-
-        prev_note = note
+        midiout.send_message(note_on)
+        time.sleep(0.05)
+        midiout.send_message(note_off)
 
     time.sleep(0.5)
-
-    prev_note = 0
 
     for note in melody:
         note_on = [0x90, note, 112]
         note_off = [0x80, note, 0]
-        prev_note_off = [0x80, prev_note, 0]
 
-        if note_on == 0:
+        if note == 0:
             note_on = [0x90, note, 0]
 
-        if note != prev_note:
-            midiout.send_message(prev_note_off)
-            time.sleep(0.05)
-            midiout.send_message(note_on)
-        else:
-            time.sleep(0.05)
-
-        prev_note = note
-
+        midiout.send_message(note_on)
+        time.sleep(0.05)
+        midiout.send_message(note_off)
 
 del midiout
