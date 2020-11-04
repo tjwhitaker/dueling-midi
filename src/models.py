@@ -5,18 +5,24 @@ from torch.autograd import Variable
 
 
 class NoteLSTM(nn.Module):
-    def __init__(self, input_size=128, output_size=128, hidden_size=256, hidden_layers=2):
+    def __init__(self):
         super(NoteLSTM, self).__init__()
-        self.input_size = input_size
-        self.output_size = output_size
-        self.hidden_size = hidden_size
-        self.hidden_layers = hidden_layers
+
+        # 128 Valid Midi Notes
+        self.input_size = 128
+        self.output_size = 128
+
+        # LSTM Hyperparams
+        self.hidden_size = 256
+        self.hidden_layers = 2
         self.embedding_dimensions = 32
 
-        self.embedding = nn.Embedding(input_size, self.embedding_dimensions)
-        self.lstm = nn.LSTM(input_size, hidden_size,
-                            hidden_layers, batch_first=True)
-        self.decoder = nn.Linear(hidden_size, output_size)
+        # Network Structure
+        self.embedding = nn.Embedding(
+            self.input_size, self.embedding_dimensions)
+        self.lstm = nn.LSTM(self.input_size, self.hidden_size,
+                            self.hidden_layers, batch_first=True)
+        self.decoder = nn.Linear(self.hidden_size, self.output_size)
 
     def forward(self, x, hidden_state):
         embedding = self.embedding(x)
@@ -31,26 +37,30 @@ class NoteLSTM(nn.Module):
 
 
 class NoteCNN(nn.Module):
-    def __init__(self, input_size=128, output_size=128, sequence_length=64):
+    def __init__(self):
         super(NoteCNN, self).__init__()
 
-        in_channels = 64
-        self.input_size = input_size
-        self.output_size = output_size
-        self.sequence_length = sequence_length
+        # 128 Valid Midi Notes
+        self.input_size = 128
+        self.output_size = 128
+
+        # CNN Hyperparams
         self.embedding_dimensions = 32
 
-        self.embedding = nn.Embedding(input_size, self.embedding_dimensions)
+        # Network Structure
+        self.embedding = nn.Embedding(
+            self.input_size, self.embedding_dimensions)
 
         self.conv_block = nn.Sequential(
-            nn.Conv1d(in_channels, 16, kernel_size=8),
-            nn.ReLU()
+            nn.Conv1d(in_channels=64, out_channels=16, kernel_size=8),
+            nn.ReLU(),
+            nn.Flatten()
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(25, 256),
+            nn.Linear(400, 256),
             nn.ReLU(),
-            nn.Linear(256, output_size)
+            nn.Linear(256, self.output_size)
         )
 
     def forward(self, x):
@@ -59,13 +69,3 @@ class NoteCNN(nn.Module):
         logits = self.decoder(features)
 
         return logits
-
-
-class SequenceLSTM(nn.Module):
-    def __init__(self):
-        pass
-
-
-class SequenceCNN(nn.Module):
-    def __init__(self):
-        pass
