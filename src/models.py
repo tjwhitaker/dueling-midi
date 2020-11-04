@@ -51,21 +51,39 @@ class NoteCNN(nn.Module):
         self.embedding = nn.Embedding(
             self.input_size, self.embedding_dimensions)
 
-        self.conv_block = nn.Sequential(
+        self.block_1 = nn.Sequential(
+            nn.Conv1d(in_channels=64, out_channels=16, kernel_size=2),
+            nn.MaxPool1d(kernel_size=2),
+            nn.ReLU(),
+            nn.Flatten()
+        )
+
+        self.block_2 = nn.Sequential(
+            nn.Conv1d(in_channels=64, out_channels=16, kernel_size=4),
+            nn.MaxPool1d(kernel_size=4),
+            nn.ReLU(),
+            nn.Flatten()
+        )
+
+        self.block_3 = nn.Sequential(
             nn.Conv1d(in_channels=64, out_channels=16, kernel_size=8),
+            nn.MaxPool1d(kernel_size=4),
             nn.ReLU(),
             nn.Flatten()
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(400, 256),
+            nn.Linear(448, 256),
             nn.ReLU(),
             nn.Linear(256, self.output_size)
         )
 
     def forward(self, x):
         embedding = self.embedding(x)
-        features = self.conv_block(embedding)
+        x1 = self.block_1(embedding)
+        x2 = self.block_2(embedding)
+        x3 = self.block_3(embedding)
+        features = torch.cat((x1, x2, x3), 1)
         logits = self.decoder(features)
 
         return logits
