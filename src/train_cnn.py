@@ -73,7 +73,7 @@ for i in range(epochs):
             loss = criterion(output, targets)
             test_loss += loss.item()
 
-    print(f"Train Loss: {train_loss}\n")
+    print(f"Train Loss: {train_loss}")
     print(f"Test Loss: {test_loss}\n")
 
 # Save model
