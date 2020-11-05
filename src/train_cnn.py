@@ -12,7 +12,7 @@ batch_size = 64
 # CNN Training Code
 #####################
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 model = NoteCNN().to(device)
 

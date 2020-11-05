@@ -49,4 +49,4 @@ for i in range(epochs):
     print(f"Loss: {total_loss}\n")
 
 # Save model
-torch.save(model.state_dict(), "models/checkpoints/notelstm.model")
+torch.save(model.state_dict(), "../models/notelstm.model")
