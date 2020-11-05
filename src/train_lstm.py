@@ -3,7 +3,7 @@ import torch
 from models import NoteLSTM
 import utils
 
-epochs = 20
+epochs = 100
 sequence_length = 64
 batch_size = 64
 
@@ -30,7 +30,6 @@ for i in range(epochs):
     for i, (inputs, targets) in enumerate(loader):
         hidden_state = model.init_hidden(inputs.size()[0])
 
-        # (batch_size, sequence_length)
         inputs = inputs.to(device)
         targets = targets.to(device)
 

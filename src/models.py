@@ -71,16 +71,8 @@ class NoteCNN(nn.Module):
             nn.Flatten()
         )
 
-        self.block_3 = nn.Sequential(
-            nn.Conv1d(in_channels=self.sequence_length,
-                      out_channels=16, kernel_size=8),
-            nn.MaxPool1d(kernel_size=8),
-            nn.ReLU(),
-            nn.Flatten()
-        )
-
         self.decoder = nn.Sequential(
-            nn.Linear(400, 256),
+            nn.Linear(352, 256),
             nn.ReLU(),
             nn.Linear(256, self.output_size)
         )
@@ -89,8 +81,7 @@ class NoteCNN(nn.Module):
         embedding = self.embedding(x)
         x1 = self.block_1(embedding)
         x2 = self.block_2(embedding)
-        x3 = self.block_3(embedding)
-        features = torch.cat((x1, x2, x3), 1)
+        features = torch.cat((x1, x2), 1)
         logits = self.decoder(features)
 
         return logits
