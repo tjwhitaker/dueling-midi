@@ -3,7 +3,7 @@ import torch
 from models import NoteLSTM
 import utils
 
-epochs = 10
+epochs = 20
 sequence_length = 64
 batch_size = 64
 
@@ -61,7 +61,7 @@ for i in range(epochs):
         loss.backward()
         optimizer.step()
 
-    # Train
+    # Test
     model.eval()
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(test_loader):

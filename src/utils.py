@@ -94,8 +94,8 @@ def sequence_to_batch(sequence, length):
 
 # Load or build pickled dataset of processed midi files
 def get_training_set(sequence_length):
-    if os.path.exists("./data/melody_dataset.pkl"):
-        return pickle.load(open("./data/melody_dataset.pkl", "rb"))
+    if os.path.exists("./data/melody_dataset_large.pkl"):
+        return pickle.load(open("./data/melody_dataset_large.pkl", "rb"))
     else:
         rolls = []
 

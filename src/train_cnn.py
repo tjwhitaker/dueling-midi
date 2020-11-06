@@ -3,7 +3,7 @@ import torch
 from models import NoteCNN
 import utils
 
-epochs = 10
+epochs = 20
 sequence_length = 64
 batch_size = 64
 
@@ -50,7 +50,7 @@ for i in range(epochs):
         # CNN Doesn't batch targets like lstm
         # Need to create single note targets instead of sequence
         # Should probably do this at the dataset level instead of here
-        targets = targets[0:sequence_length, -1].to(device)
+        targets = targets[0:, -1].to(device)
 
         output = model(inputs)
 
@@ -66,7 +66,7 @@ for i in range(epochs):
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(test_loader):
             inputs = inputs.to(device)
-            targets = targets[0:sequence_length, -1].to(device)
+            targets = targets[0:, -1].to(device)
 
             output = model(inputs)
 
