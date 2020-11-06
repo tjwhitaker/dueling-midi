@@ -68,26 +68,26 @@ def sequence_to_batch(sequence, length):
 
     # Build batch by sliding a window by 1 space.
     # Final batch size ~ 3m tuples at 64 1/16 notes
-    # for i in range(len(sequence) - length):
-    #     inputs = sequence[i:i+length]
-    #     targets = sequence[i+1:i+1+length]
-
-    #     batch.append((inputs, targets))
-
-    # Build batch by sliding the window by the sequence length
-    # Final batch size ~45k at 64 1/16 notes
-    ptr = 0
-
-    while True:
-        inputs = sequence[ptr: ptr+length]
-        targets = sequence[ptr+1: ptr+1+length]
+    for i in range(len(sequence) - length):
+        inputs = sequence[i:i+length]
+        targets = sequence[i+1:i+1+length]
 
         batch.append((inputs, targets))
 
-        ptr += length
+    # Build batch by sliding the window by the sequence length
+    # Final batch size ~45k at 64 1/16 notes
+    # ptr = 0
 
-        if ptr+length+1 > len(sequence):
-            break
+    # while True:
+    #     inputs = sequence[ptr: ptr+length]
+    #     targets = sequence[ptr+1: ptr+1+length]
+
+    #     batch.append((inputs, targets))
+
+    #     ptr += length
+
+    #     if ptr+length+1 > len(sequence):
+    #         break
 
     return batch
 
