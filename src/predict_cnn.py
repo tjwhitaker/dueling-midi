@@ -5,7 +5,7 @@ import utils
 sequence_length = 64
 num_pitches = 128
 
-device = torch.device("cpu" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
 model = NoteCNN().to(device)

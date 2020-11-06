@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-#
-# midiin_callback.py
-#
 """Show how to receive MIDI input by setting a callback function."""
 
 import logging
 import sys
 import time
-import rtmidi
+
+from rtmidi.midiutil import open_midiinput
 
 log = logging.getLogger('midiin_callback')
 logging.basicConfig(level=logging.DEBUG)
@@ -30,7 +27,7 @@ class MidiInputHandler(object):
 port = 5
 
 try:
-    midiin, port_name = rtmidi.midiutil.open_midiinput(port)
+    midiin, port_name = open_midiinput(port)
 except (EOFError, KeyboardInterrupt):
     sys.exit()
 
