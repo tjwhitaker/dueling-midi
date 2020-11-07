@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from models.notelstm import NoteLSTM
+from models import NoteLSTM
 import utils
 import rtmidi
 import time
@@ -14,10 +14,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 # Load model
-model = NoteLSTM(num_pitches, num_pitches,
-                 hidden_size, hidden_layers).to(device)
+model = NoteLSTM().to(device)
 
-model.load_state_dict(torch.load("models/checkpoints/notelstm.model"))
+model.load_state_dict(torch.load("../models/notelstm.model"))
 model.eval()
 
 training_set = utils.get_training_set(sequence_length)
