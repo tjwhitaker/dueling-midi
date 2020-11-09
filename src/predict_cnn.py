@@ -36,3 +36,4 @@ if __name__ == "__main__":
     melody = predict_cnn(model, input_sequence)
 
     print(melody)
+    print(len(melody))

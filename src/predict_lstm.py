@@ -3,7 +3,7 @@ from models import NoteLSTM
 import utils
 
 
-def predict_lstm(model, device, input_sequence, sequence_length=64):
+def predict_lstm(model, input_sequence, sequence_length=64):
     hidden_state = model.init_hidden(input_sequence.shape[0])
     melody = []
 
@@ -16,16 +16,21 @@ def predict_lstm(model, device, input_sequence, sequence_length=64):
     output = torch.functional.F.softmax(output, dim=0)
     predicted_note = torch.distributions.Categorical(output).sample()
 
-    input_note = torch.tensor([[predicted_note]]).to(device)
+    # Shift sequence and replace oldest note with prediction
+    input_sequence = torch.roll(input_sequence, shifts=-1, dims=1)
+    input_sequence[0][-1] = predicted_note.item()
 
     # Generate sequence
     for _ in range(sequence_length):
+        input_note = input_sequence[0][-1].unsqueeze(0).unsqueeze(0)
         output, hidden_state = model(input_note, hidden_state)
 
         output = torch.functional.F.softmax(torch.squeeze(output), dim=0)
         note = torch.distributions.Categorical(output).sample()
 
-        input_note[0][0] = note.item()
+        # Shift sequence and replace oldest note with prediction
+        input_sequence = torch.roll(input_sequence, shifts=-1, dims=1)
+        input_sequence[0][-1] = note.item()
         melody.append(note.item())
 
     return melody
@@ -42,6 +47,7 @@ if __name__ == "__main__":
                                     63,  0,  0, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68,  0,  0,  0,  0,  0,
                                     0,  0,  0,  0,  0, 68, 68, 68, 68,  0,  0, 65, 65, 65,  0,  0]]).to(device)
 
-    melody = predict_lstm(model, device, input_sequence)
+    melody = predict_lstm(model, input_sequence)
 
     print(melody)
+    print(len(melody))
