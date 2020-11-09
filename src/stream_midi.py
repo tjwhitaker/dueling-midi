@@ -11,8 +11,7 @@ from models import NoteLSTM
 from predict_lstm import predict_lstm
 from play_midi import play_midi
 
-from rtmidi.midiutil import open_midiinput
-import rtmidi
+from rtmidi.midiutil import open_midiinput, open_midioutput
 
 log = logging.getLogger('midiin_callback')
 logging.basicConfig(level=logging.DEBUG)
@@ -62,10 +61,12 @@ class MidiInputHandler(object):
 # Prompts user for MIDI input port, unless a valid port number or name
 # is given as the first argument on the command line.
 # API backend defaults to ALSA on Linux.
-port = 5
+in_port = 5
+out_port = 5
 
 try:
-    midiin, port_name = open_midiinput(port)
+    midiin, port_name = open_midiinput(in_port)
+    midiout, port_name = open_midioutput(out_port)
 
 except (EOFError, KeyboardInterrupt):
     sys.exit()
