@@ -22,6 +22,7 @@ def predict_lstm(model, input_sequence, sequence_length=64):
 
     # Generate sequence
     for _ in range(sequence_length):
+        # Pass most recent note to model
         input_note = input_sequence[0][-1].unsqueeze(0).unsqueeze(0)
         output, hidden_state = model(input_note, hidden_state)
 
