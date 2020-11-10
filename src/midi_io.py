@@ -38,9 +38,11 @@
 #     pass
 
 import mido
+import time
 
 with mido.open_output() as outport:
     with mido.open_input() as inport:
         for msg in inport:
             print(msg)
+            time.sleep(0.5)
             outport.send(msg)
