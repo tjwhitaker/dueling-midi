@@ -18,19 +18,13 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 class MidiInputHandler(object):
-    def __init__(self, port):
+    def __init__(self, port, model):
         self.port = port
         self.instrument = pretty_midi.Instrument(2)
         self.start_time = 0
         self._wallclock = 0.0
-        self.midiout = rtmidi.MidiOut()
-        self.midiout.open_port(5)
 
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
-        self.model = NoteLSTM().to(self.device)
-        self.model.load_state_dict(torch.load("../models/notelstm.model"))
-        self.model.eval()
+        self.model = model
 
     def __call__(self, event, data=None):
         message, deltatime = event
@@ -38,15 +32,15 @@ class MidiInputHandler(object):
 
         # Trigger Neural Network prediction when lowest key on 88 is pressed
         if message[1] == 21:
-            roll = self.instrument.get_piano_roll(fs=16)
-            trimmed = utils.trim_roll(roll)
-            pitches, velocities = utils.split_roll(trimmed)
-            print(pitches[-64:])
+            # roll = self.instrument.get_piano_roll(fs=16)
+            # trimmed = utils.trim_roll(roll)
+            # pitches, velocities = utils.split_roll(trimmed)
+            # print(pitches[-64:])
 
-            input_sequence = torch.tensor([pitches[-64:]]).to(self.device)
+            # input_sequence = torch.tensor([pitches[-64:]]).to(self.device)
 
-            melody = predict_lstm(self.model, input_sequence)
-            play_midi(melody, self.midiout)
+            # melody = predict_lstm(self.model, input_sequence)
+            # play_midi(melody)
         else:
             if message[0] == 0x90:
                 self.start_time = self._wallclock
@@ -66,8 +60,6 @@ out_port = 5
 
 try:
     midiin, port_name = open_midiinput(in_port)
-    midiout, port_name = open_midioutput(out_port)
-
 except (EOFError, KeyboardInterrupt):
     sys.exit()
 
