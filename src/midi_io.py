@@ -39,6 +39,8 @@
 
 import mido
 
-output_port = mido.open_output()
-msg = mido.Message("note_on", note=60)
-output_port.send(msg)
+with mido.open_output() as outport:
+    with mido.open_input() as inport:
+        for msg in inport:
+            print(msg)
+            outport.send(msg)
