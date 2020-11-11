@@ -13,8 +13,8 @@ class NoteLSTM(nn.Module):
         self.output_size = 128
 
         # LSTM Hyperparams
-        self.hidden_size = 256
-        self.hidden_layers = 2
+        self.hidden_size = 128
+        self.hidden_layers = 1
         self.embedding_dimensions = 32
 
         # Network Structure
@@ -55,42 +55,23 @@ class NoteCNN(nn.Module):
         self.embedding = nn.Embedding(
             self.input_size, self.embedding_dimensions)
 
-        self.block_1 = nn.Sequential(
+        self.conv_block = nn.Sequential(
             nn.Conv1d(in_channels=self.sequence_length,
-                      out_channels=32, kernel_size=2),
+                      out_channels=16, kernel_size=2),
             nn.MaxPool1d(kernel_size=2),
             nn.ReLU(),
             nn.Flatten()
         )
 
-        self.block_2 = nn.Sequential(
-            nn.Conv1d(in_channels=self.sequence_length,
-                      out_channels=32, kernel_size=4),
-            nn.MaxPool1d(kernel_size=4),
-            nn.ReLU(),
-            nn.Flatten()
-        )
-
-        self.block_3 = nn.Sequential(
-            nn.Conv1d(in_channels=self.sequence_length,
-                      out_channels=32, kernel_size=8),
-            nn.MaxPool1d(kernel_size=8),
-            nn.ReLU(),
-            nn.Flatten()
-        )
-
         self.decoder = nn.Sequential(
-            nn.Linear(1184, 256),
+            nn.Linear(240, 64),
             nn.ReLU(),
-            nn.Linear(256, self.output_size)
+            nn.Linear(64, self.output_size)
         )
 
     def forward(self, x):
         embedding = self.embedding(x)
-        x1 = self.block_1(embedding)
-        x2 = self.block_2(embedding)
-        x3 = self.block_1(embedding)
-        features = torch.cat((x1, x2, x3), 1)
+        features = self.conv_block(embedding)
         logits = self.decoder(features)
 
         return logits
