@@ -3,8 +3,8 @@ import pretty_midi
 import time
 import utils
 import torch
-from models import NoteCNN
-from predict_cnn import predict_cnn
+from models import NoteLSTM
+from predict_lstm import predict_lstm
 
 # Params for midi streaming
 port_name = "USB Midi:USB Midi MIDI 1 28:0"
@@ -19,8 +19,8 @@ instrument = pretty_midi.Instrument(2)
 
 # Setting up the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = NoteCNN().to(device)
-model.load_state_dict(torch.load("../models/notecnn.model"))
+model = NoteLSTM().to(device)
+model.load_state_dict(torch.load("../models/notelstm.model"))
 model.eval()
 
 with mido.open_output(port_name) as outport:
@@ -39,7 +39,7 @@ with mido.open_output(port_name) as outport:
                     pitches, _ = utils.split_roll(trimmed)
 
                     input_sequence = torch.tensor([pitches[-64:]]).to(device)
-                    melody = predict_cnn(model, input_sequence)
+                    melody = predict_lstm(model, input_sequence)
 
                     # Play melody
                     for note in melody:
