@@ -75,3 +75,74 @@ class NoteCNN(nn.Module):
         logits = self.decoder(features)
 
         return logits
+
+
+class MelodyLSTM(nn.Module):
+    def __init__(self):
+        super(MelodyLSTM, self).__init__()
+
+    def forward(self):
+        pass
+
+
+class MelodyEncoder(nn.Module):
+    def __init__(self):
+        super(MelodyEncoder, self).__init__()
+        # 128 Valid Midi Notes
+        self.input_size = 128
+        self.output_size = 128
+
+        # LSTM Hyperparams
+        self.hidden_size = 128
+        self.hidden_layers = 1
+        self.embedding_dimensions = 32
+
+        # Network Structure
+        self.embedding = nn.Embedding(
+            self.input_size, self.embedding_dimensions)
+
+        self.lstm = nn.LSTM(self.embedding_dimensions, self.hidden_size,
+                            self.hidden_layers, batch_first=True)
+
+    def forward(self, x, hidden_state):
+        embedding = self.embedding(x)
+        output, hidden_state = self.lstm(embedding, hidden_state)
+
+        return output, hidden_state
+
+    def init_hidden(self, batch_size):
+        return (Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda(),
+                Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))
+
+
+class MelodyDecoder(nn.Module):
+    def __init__(self):
+        super(MelodyDecoder, self).__init__()
+
+        # 128 Valid Midi Notes
+        self.input_size = 128
+        self.output_size = 128
+
+        # LSTM Hyperparams
+        self.hidden_size = 128
+        self.hidden_layers = 1
+        self.embedding_dimensions = 32
+
+        # Network Structure
+        self.embedding = nn.Embedding(
+            self.input_size, self.embedding_dimensions)
+
+        self.lstm = nn.LSTM(self.embedding_dimensions, self.hidden_size,
+                            self.hidden_layers, batch_first=True)
+
+        self.out = nn.Linear(self.hidden_size, self.output_size)
+
+    def forward(self, x, hidden_state):
+        embedding = F.relu(self.embedding(x))
+        output, hidden_state = self.lstm(embedding, hidden_state)
+
+        return output, hidden_state
+
+    def init_hidden(self, batch_size):
+        return (Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda(),
+                Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))

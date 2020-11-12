@@ -3,7 +3,7 @@ import torch
 from models import NoteLSTM
 import utils
 
-epochs = 20
+epochs = 50
 sequence_length = 64
 batch_size = 64
 
