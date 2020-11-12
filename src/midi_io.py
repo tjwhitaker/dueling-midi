@@ -1,10 +1,10 @@
-import mido
-import pretty_midi
-import time
-import utils
-import torch
-from models import NoteLSTM
 from predict_lstm import predict_lstm
+from models import NoteLSTM
+import torch
+import utils
+import time
+import pretty_midi
+import mido
 
 # Params for midi streaming
 port_name = "USB Midi:USB Midi MIDI 1 28:0"
@@ -26,6 +26,7 @@ model.load_state_dict(torch.load("../models/notelstm.model"))
 model.eval()
 
 print("Opening midi ports")
+
 with mido.open_output(port_name) as outport:
     with mido.open_input(port_name) as inport:
         for msg in inport:
@@ -47,12 +48,29 @@ with mido.open_output(port_name) as outport:
                     input_sequence = torch.tensor([pitches[-64:]]).to(device)
                     melody = predict_lstm(model, input_sequence)
 
+                    print(melody)
+
                     # Play melody
+                    previous_note = None
+
                     for note in melody:
-                        outport.send(mido.Message(type="note_on", note=note))
+                        if previous_note == None:
+                            outport.send(mido.Message(
+                                type="note_on", note=note))
+
+                        elif note != previous_note:
+                            outport.send(mido.Message(
+                                type="note_off", note=previous_note))
+
+                            outport.send(mido.Message(
+                                type="note_on", note=note))
+
+                        previous_note = note
                         time.sleep(1./16)
-                        outport.send(mido.Message(type="note_off", note=note))
-                        time.sleep(1./16)
+
+                    outport.send(mido.Message(
+                        type="note_off", note=previous_note))
+
                 else:
                     note_end = wallclock
                     note = pretty_midi.Note(
