@@ -11,6 +11,7 @@ port_name = "USB Midi:USB Midi MIDI 1 28:0"
 note_buffer = []
 start_time = time.time()
 wallclock = 0
+note_start=0
 
 # Pretty midi for piano roll
 # Probably a good place to improve performance.
@@ -41,7 +42,7 @@ with mido.open_output(port_name) as outport:
                 if msg.note == 21:
                     # Generate Melody
                     print("Generating melody")
-                    roll = instrument.get_piano_roll(fs=16)
+                    roll = instrument.get_piano_roll(fs=32)
                     trimmed = utils.trim_roll(roll)
                     pitches, _ = utils.split_roll(trimmed)
 
@@ -55,18 +56,21 @@ with mido.open_output(port_name) as outport:
 
                     for note in melody:
                         if previous_note == None:
-                            outport.send(mido.Message(
-                                type="note_on", note=note))
+                            if note != 0:
+                                outport.send(mido.Message(
+                                    type="note_on", note=note))
 
                         elif note != previous_note:
-                            outport.send(mido.Message(
-                                type="note_off", note=previous_note))
-
-                            outport.send(mido.Message(
-                                type="note_on", note=note))
+                            if previous_note != 0:
+                                outport.send(mido.Message(
+                                    type="note_off", note=previous_note))
+                            
+                            if note != 0:
+                                outport.send(mido.Message(
+                                    type="note_on", note=note))
 
                         previous_note = note
-                        time.sleep(1./16)
+                        time.sleep(1./32)
 
                     outport.send(mido.Message(
                         type="note_off", note=previous_note))
