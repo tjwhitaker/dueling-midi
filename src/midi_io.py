@@ -39,15 +39,18 @@ with mido.open_output(port_name) as outport:
                 note_start = wallclock
             if msg.type == "note_off":
                 # Trigger neural network
-                if msg.note == 21:
+                if msg.note == 108:
                     # Generate Melody
-                    print("Generating melody")
+                    print("Getting conditional input")
                     roll = instrument.get_piano_roll(fs=32)
                     trimmed = utils.trim_roll(roll)
                     pitches, _ = utils.split_roll(trimmed)
 
+                    print(pitches[-64:])
+
+                    print("Generating melody")
                     input_sequence = torch.tensor([pitches[-64:]]).to(device)
-                    melody = predict_lstm(model, input_sequence)
+                    melody = predict_lstm(model, input_sequence, sequence_length=128)
 
                     print(melody)
 
