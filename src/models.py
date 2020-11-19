@@ -77,17 +77,10 @@ class NoteCNN(nn.Module):
         return logits
 
 
-class MelodyLSTM(nn.Module):
+class Encoder(nn.Module):
     def __init__(self):
-        super(MelodyLSTM, self).__init__()
+        super(Encoder, self).__init__()
 
-    def forward(self):
-        pass
-
-
-class MelodyEncoder(nn.Module):
-    def __init__(self):
-        super(MelodyEncoder, self).__init__()
         # 128 Valid Midi Notes
         self.input_size = 128
         self.output_size = 128
@@ -115,9 +108,9 @@ class MelodyEncoder(nn.Module):
                 Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))
 
 
-class MelodyDecoder(nn.Module):
+class Decoder(nn.Module):
     def __init__(self):
-        super(MelodyDecoder, self).__init__()
+        super(Decoder, self).__init__()
 
         # 128 Valid Midi Notes
         self.input_size = 128
@@ -135,13 +128,14 @@ class MelodyDecoder(nn.Module):
         self.lstm = nn.LSTM(self.embedding_dimensions, self.hidden_size,
                             self.hidden_layers, batch_first=True)
 
-        self.out = nn.Linear(self.hidden_size, self.output_size)
+        self.decoder = nn.Linear(self.hidden_size, self.output_size)
 
     def forward(self, x, hidden_state):
-        embedding = F.relu(self.embedding(x))
+        embedding = self.embedding(x)
         output, hidden_state = self.lstm(embedding, hidden_state)
+        logits = self.decoder(output)
 
-        return output, hidden_state
+        return logits, hidden_state
 
     def init_hidden(self, batch_size):
         return (Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda(),
