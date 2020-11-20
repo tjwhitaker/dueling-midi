@@ -1,19 +1,20 @@
 import numpy as np
 import torch
-from models import Encoder, Decoder, Seq2Seq
+from models import Encoder, Decoder
 import utils
 
 epochs = 10
 sequence_length = 64
 batch_size = 64
 
-#######################
-# Seq2Seq Training Code
-#######################
+#####################
+# LSTM Training Code
+#####################
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = Seq2Seq().to(device)
+encoder = Encoder().to(device)
+decoder = Decoder().to(device)
 
 dataset = utils.get_training_set(sequence_length)
 
@@ -33,8 +34,9 @@ test_loader = torch.utils.data.DataLoader(
 
 criterion = torch.nn.CrossEntropyLoss()
 
+encoder_optimizer = torch.optim.Adam(encoder.parameters())
+decoder_optimizer = torch.optim.Adam(decoder.parameters())
 
-optimizer = torch.optim.Adam(model.parameters())
 
 for i in range(epochs):
     print(f"EPOCH {i}")
@@ -44,46 +46,53 @@ for i in range(epochs):
     test_loss = 0
 
     # Train
-    model.train()
+    encoder.train()
+    decoder.train()
 
     for i, (inputs, targets) in enumerate(train_loader):
-        hidden_state = model.init_hidden(inputs.size()[0])
+        hidden_state = encoder.init_hidden(inputs.size()[0])
 
         inputs = inputs.to(device)
         targets = targets.to(device)
 
-        output, hidden_state = model(inputs, hidden_state)
+        encoder_output, hidden_state = encoder(inputs, hidden_state)
+        decoder_output, hidden_state = decoder(inputs, hidden_state)
 
         # Loss function expects (batch_size, feature_dim, sequence_length)
-        output = output.permute(0, 2, 1)
+        decoder_output = decoder_output.permute(0, 2, 1)
 
-        loss = criterion(output, targets)
+        loss = criterion(decoder_output, targets)
         train_loss += loss.item()
 
-        model.zero_grad()
+        encoder.zero_grad()
+        decoder.zero_grad()
         loss.backward()
-        optimizer.step()
+        encoder_optimizer.step()
+        decoder_optimizer.step()
 
     # Test
-    model.eval()
+    encoder.eval()
+    decoder.eval()
 
     with torch.no_grad():
         for i, (inputs, targets) in enumerate(test_loader):
-            hidden_state = model.init_hidden(inputs.size()[0])
+            hidden_state = encoder.init_hidden(inputs.size()[0])
 
             inputs = inputs.to(device)
             targets = targets.to(device)
 
-            output, hidden_state = model(inputs, hidden_state)
+            encoder_output, hidden_state = encoder(inputs, hidden_state)
+            decoder_output, hidden_state = decoder(inputs, hidden_state)
 
             # Loss function expects (batch_size, feature_dim, sequence_length)
-            output = output.permute(0, 2, 1)
+            decoder_output = decoder_output.permute(0, 2, 1)
 
-            loss = criterion(output, targets)
+            loss = criterion(decoder_output, targets)
             test_loss += loss.item()
 
     print(f"Train Loss: {train_loss}")
     print(f"Test Loss: {test_loss}\n")
 
 # Save model
-torch.save(model.state_dict(), "../models/seq2seq.model")
+torch.save(encoder.state_dict(), "../models/encoder.model")
+torch.save(decoder.state_dict(), "../models/decoder.model")

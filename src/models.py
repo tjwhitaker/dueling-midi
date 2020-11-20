@@ -137,10 +137,6 @@ class Decoder(nn.Module):
 
         return logits, hidden_state
 
-    def init_hidden(self, batch_size):
-        return (Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda(),
-                Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))
-
 
 class Seq2Seq(nn.Module):
     def __init__(self):
