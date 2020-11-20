@@ -140,3 +140,20 @@ class Decoder(nn.Module):
     def init_hidden(self, batch_size):
         return (Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda(),
                 Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))
+
+
+class Seq2Seq(nn.Module):
+    def __init__(self):
+        super(Seq2Seq, self).__init__()
+
+        self.encoder = Encoder()
+        self.decoder = Decoder()
+
+    def forward(self, x, hidden_state):
+        encoder_output, hidden_state = self.encoder(x, hidden_state)
+        decoder_output, hidden_state = self.decoder(x, hidden_state)
+
+        return decoder_output, hidden_state
+
+    def init_hidden(self, batch_size):
+        return self.encoder.init_hidden(batch_size)
