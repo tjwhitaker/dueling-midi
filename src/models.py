@@ -138,18 +138,18 @@ class Decoder(nn.Module):
         return logits, hidden_state
 
 
-class Seq2Seq(nn.Module):
-    def __init__(self):
-        super(Seq2Seq, self).__init__()
+# class Seq2Seq(nn.Module):
+#     def __init__(self):
+#         super(Seq2Seq, self).__init__()
 
-        self.encoder = Encoder()
-        self.decoder = Decoder()
+#         self.encoder = Encoder()
+#         self.decoder = Decoder()
 
-    def forward(self, x, hidden_state):
-        encoder_output, hidden_state = self.encoder(x, hidden_state)
-        decoder_output, hidden_state = self.decoder(x, hidden_state)
+#     def forward(self, x, hidden_state):
+#         encoder_output, hidden_state = self.encoder(x, hidden_state)
+#         decoder_output, hidden_state = self.decoder(x, hidden_state)
 
-        return decoder_output, hidden_state
+#         return decoder_output, hidden_state
 
-    def init_hidden(self, batch_size):
-        return self.encoder.init_hidden(batch_size)
+#     def init_hidden(self, batch_size):
+#         return self.encoder.init_hidden(batch_size)
