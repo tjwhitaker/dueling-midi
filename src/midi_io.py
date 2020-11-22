@@ -1,5 +1,6 @@
 from predict_lstm import predict_lstm
-from models import NoteLSTM
+from predict_seq2seq import predict_seq2seq
+from models import NoteLSTM, Encoder, Decoder
 import torch
 import utils
 import time
@@ -11,7 +12,7 @@ port_name = "USB Midi:USB Midi MIDI 1 28:0"
 note_buffer = []
 start_time = time.time()
 wallclock = 0
-note_start=0
+note_start = 0
 
 # Pretty midi for piano roll
 # Probably a good place to improve performance.
@@ -22,9 +23,15 @@ print("Setting up the model")
 
 # Setting up the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = NoteLSTM().to(device)
-model.load_state_dict(torch.load("../models/notelstm.model"))
-model.eval()
+# model = NoteLSTM().to(device)
+# model.load_state_dict(torch.load("../models/notelstm.model"))
+# model.eval()
+encoder = Encoder().to(device)
+decoder = Decoder().to(device)
+encoder.load_state_dict(torch.load("../models/encoder.model"))
+decoder.load_state_dict(torch.load("../models/decoder.model"))
+encoder.eval()
+decoder.eval()
 
 print("Opening midi ports")
 
@@ -50,7 +57,11 @@ with mido.open_output(port_name) as outport:
 
                     print("Generating melody")
                     input_sequence = torch.tensor([pitches[-64:]]).to(device)
-                    melody = predict_lstm(model, input_sequence, sequence_length=128)
+                    # melody = predict_lstm(
+                    #     model, input_sequence, sequence_length=128)
+
+                    melody = predict_seq2seq(
+                        encoder, decoder, input_sequence, sequence_length=128)
 
                     print(melody)
 
@@ -67,7 +78,7 @@ with mido.open_output(port_name) as outport:
                             if previous_note != 0:
                                 outport.send(mido.Message(
                                     type="note_off", note=previous_note))
-                            
+
                             if note != 0:
                                 outport.send(mido.Message(
                                     type="note_on", note=note))
