@@ -1,6 +1,7 @@
 from predict_lstm import predict_lstm
 from predict_seq2seq import predict_seq2seq
-from models import NoteLSTM, Encoder, Decoder
+from predict_gru import predict_gru
+from models import NoteLSTM, NoteGRU, Encoder, Decoder
 import torch
 import utils
 import time
@@ -27,6 +28,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = NoteLSTM().to(device)
 model.load_state_dict(torch.load("../models/notelstm.model"))
 model.eval()
+
+# model = NoteGRU().to(device)
+# model.load_state_dict(torch.load("../models/notegru.model"))
+# model.eval()
 
 # encoder = Encoder().to(device)
 # decoder = Decoder().to(device)
@@ -93,6 +98,10 @@ with mido.open_output(port_name) as outport:
 
                     outport.send(mido.Message(
                         type="note_off", note=previous_note))
+
+                    # Clear buffer
+                    print("Clearing note buffer")
+                    instrument.notes = []
 
                 else:
                     note_end = wallclock
