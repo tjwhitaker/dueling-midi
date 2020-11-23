@@ -4,7 +4,7 @@ from models import NoteLSTM
 import utils
 
 epochs = 20
-sequence_length = 256
+sequence_length = 32
 batch_size = 64
 
 #####################

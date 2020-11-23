@@ -23,7 +23,7 @@ def midi_to_roll(file):
 
     for track in midi_data.instruments:
         if track.name == "MELODY":
-            roll = track.get_piano_roll()
+            roll = track.get_piano_roll(fs=16)
             trimmed = trim_roll(roll)
 
     return trimmed
