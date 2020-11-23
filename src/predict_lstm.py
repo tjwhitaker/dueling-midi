@@ -44,11 +44,14 @@ if __name__ == "__main__":
     model.load_state_dict(torch.load("../models/notelstm.model"))
     model.eval()
 
-    input_sequence = torch.tensor([[61, 61,  0, 63,  0, 66,  0,  0, 68,  0,  0, 70,  0,  0,  0,  0, 66, 66, 66,  0,  0, 63, 63, 63,
-                                    63,  0,  0, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68,  0,  0,  0,  0,  0,
-                                    0,  0,  0,  0,  0, 68, 68, 68, 68,  0,  0, 65, 65, 65,  0,  0]]).to(device)
+    # input_sequence = torch.tensor([[61, 61,  0, 63,  0, 66,  0,  0, 68,  0,  0, 70,  0,  0,  0,  0, 66, 66, 66,  0,  0, 63, 63, 63,
+    #                                 63,  0,  0, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68,  0,  0,  0,  0,  0,
+    #                                 0,  0,  0,  0,  0, 68, 68, 68, 68,  0,  0, 65, 65, 65,  0,  0]]).to(device)
 
-    melody = predict_lstm(model, input_sequence)
+    training_set = utils.get_training_set(sequence_length=256)
+    input_sequence = torch.tensor(training_set[0][0]).unsqueeze(0).to(device)
 
+    melody = predict_lstm(model, input_sequence, sequence_length=256)
+
+    print(input_sequence)
     print(melody)
-    print(len(melody))

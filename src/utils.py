@@ -23,7 +23,7 @@ def midi_to_roll(file):
 
     for track in midi_data.instruments:
         if track.name == "MELODY":
-            roll = track.get_piano_roll(fs=32)
+            roll = track.get_piano_roll()
             trimmed = trim_roll(roll)
 
     return trimmed
@@ -92,7 +92,7 @@ def sequence_to_batch(sequence, length):
 
 
 # Load or build pickled dataset of processed midi files
-def get_training_set(sequence_length):
+def get_training_set(sequence_length=64):
     if os.path.exists("./data/melody_dataset_small.pkl"):
         return pickle.load(open("./data/melody_dataset_small.pkl", "rb"))
     else:

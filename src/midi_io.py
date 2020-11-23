@@ -23,15 +23,19 @@ print("Setting up the model")
 
 # Setting up the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# model = NoteLSTM().to(device)
-# model.load_state_dict(torch.load("../models/notelstm.model"))
-# model.eval()
-encoder = Encoder().to(device)
-decoder = Decoder().to(device)
-encoder.load_state_dict(torch.load("../models/encoder.model"))
-decoder.load_state_dict(torch.load("../models/decoder.model"))
-encoder.eval()
-decoder.eval()
+
+model = NoteLSTM().to(device)
+model.load_state_dict(torch.load("../models/notelstm.model"))
+model.eval()
+
+# encoder = Encoder().to(device)
+# decoder = Decoder().to(device)
+
+# encoder.load_state_dict(torch.load("../models/encoder.model"))
+# decoder.load_state_dict(torch.load("../models/decoder.model"))
+
+# encoder.eval()
+# decoder.eval()
 
 print("Opening midi ports")
 
@@ -57,11 +61,11 @@ with mido.open_output(port_name) as outport:
 
                     print("Generating melody")
                     input_sequence = torch.tensor([pitches[-64:]]).to(device)
-                    # melody = predict_lstm(
-                    #     model, input_sequence, sequence_length=128)
+                    melody = predict_lstm(
+                        model, input_sequence, sequence_length=128)
 
-                    melody = predict_seq2seq(
-                        encoder, decoder, input_sequence, sequence_length=128)
+                    # melody = predict_seq2seq(
+                    #     encoder, decoder, input_sequence, sequence_length=128)
 
                     print(melody)
 
@@ -69,6 +73,8 @@ with mido.open_output(port_name) as outport:
                     previous_note = None
 
                     for note in melody:
+                        time.sleep(1./32)
+
                         if previous_note == None:
                             if note != 0:
                                 outport.send(mido.Message(
@@ -84,7 +90,6 @@ with mido.open_output(port_name) as outport:
                                     type="note_on", note=note))
 
                         previous_note = note
-                        time.sleep(1./32)
 
                     outport.send(mido.Message(
                         type="note_off", note=previous_note))
