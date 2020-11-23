@@ -13,9 +13,9 @@ class NoteLSTM(nn.Module):
         self.output_size = 128
 
         # LSTM Hyperparams
-        self.hidden_size = 128
-        self.hidden_layers = 2
-        self.embedding_dimensions = 8
+        self.hidden_size = 256
+        self.hidden_layers = 1
+        self.embedding_dimensions = 4
 
         # Network Structure
         self.embedding = nn.Embedding(
@@ -47,9 +47,9 @@ class NoteGRU(nn.Module):
         self.output_size = 128
 
         # GRU Hyperparams
-        self.hidden_size = 128
-        self.hidden_layers = 2
-        self.embedding_dimensions = 8
+        self.hidden_size = 256
+        self.hidden_layers = 1
+        self.embedding_dimensions = 4
 
         # Network Structure
         self.embedding = nn.Embedding(

@@ -51,7 +51,7 @@ if __name__ == "__main__":
     training_set = utils.get_training_set(sequence_length=32)
     input_sequence = torch.tensor(training_set[0][0]).unsqueeze(0).to(device)
 
-    melody = predict_lstm(model, input_sequence, sequence_length=32)
+    melody = predict_lstm(model, input_sequence, sequence_length=64)
 
     print(input_sequence)
     print(melody)

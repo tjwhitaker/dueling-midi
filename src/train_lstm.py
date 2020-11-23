@@ -5,7 +5,7 @@ import utils
 
 epochs = 20
 sequence_length = 32
-batch_size = 64
+batch_size = 32
 
 #####################
 # LSTM Training Code

@@ -92,7 +92,7 @@ def sequence_to_batch(sequence, length):
 
 
 # Load or build pickled dataset of processed midi files
-def get_training_set(sequence_length=64):
+def get_training_set(sequence_length=32):
     if os.path.exists("./data/melody_dataset_small.pkl"):
         return pickle.load(open("./data/melody_dataset_small.pkl", "rb"))
     else:

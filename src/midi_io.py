@@ -58,16 +58,16 @@ with mido.open_output(port_name) as outport:
                 if msg.note == 108:
                     # Generate Melody
                     print("Getting conditional input")
-                    roll = instrument.get_piano_roll()
+                    roll = instrument.get_piano_roll(fs=16)
                     trimmed = utils.trim_roll(roll)
                     pitches, _ = utils.split_roll(trimmed)
 
-                    print(pitches[-256:])
+                    print(pitches[-32:])
 
                     print("Generating melody")
-                    input_sequence = torch.tensor([pitches[-256:]]).to(device)
+                    input_sequence = torch.tensor([pitches[-32:]]).to(device)
                     melody = predict_lstm(
-                        model, input_sequence, sequence_length=256)
+                        model, input_sequence, sequence_length=64)
 
                     # melody = predict_seq2seq(
                     #     encoder, decoder, input_sequence, sequence_length=128)
@@ -78,8 +78,6 @@ with mido.open_output(port_name) as outport:
                     previous_note = None
 
                     for note in melody:
-                        time.sleep(1./128)
-
                         if previous_note == None:
                             if note != 0:
                                 outport.send(mido.Message(
@@ -95,6 +93,7 @@ with mido.open_output(port_name) as outport:
                                     type="note_on", note=note))
 
                         previous_note = note
+                        time.sleep(1./16)
 
                     outport.send(mido.Message(
                         type="note_off", note=previous_note))
