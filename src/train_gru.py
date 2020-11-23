@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from models import NoteLSTM
+from models import NoteGRU
 import utils
 
 epochs = 20
@@ -8,12 +8,12 @@ sequence_length = 256
 batch_size = 64
 
 #####################
-# LSTM Training Code
+# GRU Training Code
 #####################
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = NoteLSTM().to(device)
+model = NoteGRU().to(device)
 
 dataset = utils.get_training_set(sequence_length)
 
@@ -82,4 +82,4 @@ for i in range(epochs):
     print(f"Test Loss: {test_loss}\n")
 
 # Save model
-torch.save(model.state_dict(), "../models/notelstm.model")
+torch.save(model.state_dict(), "../models/notegru.model")
