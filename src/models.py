@@ -90,15 +90,15 @@ class NoteCNN(nn.Module):
 
         self.conv_block = nn.Sequential(
             nn.Conv1d(in_channels=self.sequence_length,
-                      out_channels=16, kernel_size=3),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=16,
                       out_channels=32, kernel_size=3),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=32,
+                      out_channels=64, kernel_size=3),
             nn.ReLU(),
             nn.Flatten()
         )
 
-        self.decoder = nn.Linear(896, self.output_size)
+        self.decoder = nn.Linear(896*2, self.output_size)
 
     def forward(self, x):
         embedding = self.embedding(x)
