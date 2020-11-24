@@ -1,7 +1,8 @@
 from predict_lstm import predict_lstm
 from predict_seq2seq import predict_seq2seq
 from predict_gru import predict_gru
-from models import NoteLSTM, NoteGRU, Encoder, Decoder
+from predict_cnn import predict_cnn
+from models import NoteLSTM, NoteGRU, NoteCNN, Encoder, Decoder
 import torch
 import utils
 import time
@@ -25,13 +26,17 @@ print("Setting up the model")
 # Setting up the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = NoteLSTM().to(device)
-model.load_state_dict(torch.load("../models/notelstm.model"))
-model.eval()
+# model = NoteLSTM().to(device)
+# model.load_state_dict(torch.load("../models/notelstm.model"))
+# model.eval()
 
 # model = NoteGRU().to(device)
 # model.load_state_dict(torch.load("../models/notegru.model"))
 # model.eval()
+
+model = NoteCNN().to(device)
+model.load_state_dict(torch.load("../models/notecnn.model"))
+model.eval()
 
 # encoder = Encoder().to(device)
 # decoder = Decoder().to(device)
@@ -66,11 +71,11 @@ with mido.open_output(port_name) as outport:
 
                     print("Generating melody")
                     input_sequence = torch.tensor([pitches[-32:]]).to(device)
-                    melody = predict_lstm(
+                    melody = predict_cnn(
                         model, input_sequence, sequence_length=64)
 
                     # melody = predict_seq2seq(
-                    #     encoder, decoder, input_sequence, sequence_length=128)
+                    #     encoder, decoder, input_sequence, sequence_length=64)
 
                     print(melody)
 
