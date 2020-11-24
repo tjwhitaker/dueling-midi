@@ -3,12 +3,12 @@ import torch
 from models import Encoder, Decoder
 import utils
 
-epochs = 10
-sequence_length = 64
-batch_size = 64
+epochs = 20
+sequence_length = 32
+batch_size = 32
 
 #####################
-# LSTM Training Code
+# Seq2Seq Training Code
 #####################
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

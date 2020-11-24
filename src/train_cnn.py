@@ -4,9 +4,8 @@ from models import NoteCNN
 import utils
 
 epochs = 20
-sequence_length = 64
-batch_size = 64
-
+sequence_length = 32
+batch_size = 32
 
 #####################
 # CNN Training Code

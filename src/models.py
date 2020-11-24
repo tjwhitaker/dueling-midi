@@ -75,7 +75,7 @@ class NoteCNN(nn.Module):
     def __init__(self):
         super(NoteCNN, self).__init__()
 
-        self.sequence_length = 64
+        self.sequence_length = 32
 
         # 128 Valid Midi Notes
         self.input_size = 128
@@ -90,17 +90,16 @@ class NoteCNN(nn.Module):
 
         self.conv_block = nn.Sequential(
             nn.Conv1d(in_channels=self.sequence_length,
-                      out_channels=16, kernel_size=2),
-            nn.MaxPool1d(kernel_size=2),
+                      out_channels=16, kernel_size=3),
             nn.ReLU(),
+            nn.Conv1d(in_channels=16,
+                      out_channels=32, kernel_size=3),
+            nn.ReLU(),
+            nn.
             nn.Flatten()
         )
 
-        self.decoder = nn.Sequential(
-            nn.Linear(240, 64),
-            nn.ReLU(),
-            nn.Linear(64, self.output_size)
-        )
+        self.decoder = nn.Linear(896, self.output_size)
 
     def forward(self, x):
         embedding = self.embedding(x)

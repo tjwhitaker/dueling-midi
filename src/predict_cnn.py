@@ -33,6 +33,9 @@ if __name__ == "__main__":
                                     63,  0,  0, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68,  0,  0,  0,  0,  0,
                                     0,  0,  0,  0,  0, 68, 68, 68, 68,  0,  0, 65, 65, 65,  0,  0]]).to(device)
 
+    training_set = utils.get_training_set(sequence_length=32)
+    input_sequence = torch.tensor(training_set[0][0]).unsqueeze(0).to(device)
+
     melody = predict_cnn(model, input_sequence)
 
     print(melody)
