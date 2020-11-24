@@ -95,7 +95,6 @@ class NoteCNN(nn.Module):
             nn.Conv1d(in_channels=16,
                       out_channels=32, kernel_size=3),
             nn.ReLU(),
-            nn.
             nn.Flatten()
         )
 
