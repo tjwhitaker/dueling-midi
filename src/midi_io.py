@@ -60,7 +60,7 @@ with mido.open_output(port_name) as outport:
                 note_start = wallclock
             if msg.type == "note_off":
                 # Trigger neural network
-                if msg.note == 108:
+                if msg.note == 60:
                     # Generate Melody
                     print("Getting conditional input")
                     roll = instrument.get_piano_roll(fs=16)
