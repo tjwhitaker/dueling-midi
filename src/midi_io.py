@@ -26,28 +26,30 @@ print("Setting up the model")
 # Setting up the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# model = NoteLSTM().to(device)
-# model.load_state_dict(torch.load("../models/notelstm.model"))
-# model.eval()
+lstm = NoteLSTM().to(device)
+lstm.load_state_dict(torch.load("../models/notelstm.model"))
+lstm.eval()
 
-# model = NoteGRU().to(device)
-# model.load_state_dict(torch.load("../models/notegru.model"))
-# model.eval()
+gru = NoteGRU().to(device)
+gru.load_state_dict(torch.load("../models/notegru.model"))
+gru.eval()
 
-model = NoteCNN().to(device)
-model.load_state_dict(torch.load("../models/notecnn.model"))
-model.eval()
+cnn = NoteCNN().to(device)
+cnn.load_state_dict(torch.load("../models/notecnn.model"))
+cnn.eval()
 
-# encoder = Encoder().to(device)
-# decoder = Decoder().to(device)
+encoder = Encoder().to(device)
+decoder = Decoder().to(device)
 
-# encoder.load_state_dict(torch.load("../models/encoder.model"))
-# decoder.load_state_dict(torch.load("../models/decoder.model"))
+encoder.load_state_dict(torch.load("../models/encoder.model"))
+decoder.load_state_dict(torch.load("../models/decoder.model"))
 
-# encoder.eval()
-# decoder.eval()
+encoder.eval()
+decoder.eval()
 
 print("Opening midi ports")
+
+triggers = [105, 106, 107, 108]
 
 with mido.open_output(port_name) as outport:
     with mido.open_input(port_name) as inport:
@@ -60,22 +62,30 @@ with mido.open_output(port_name) as outport:
                 note_start = wallclock
             if msg.type == "note_off":
                 # Trigger neural network
-                if msg.note == 60:
-                    # Generate Melody
+                if msg.note in triggers:
+                    # Build input
                     print("Getting conditional input")
                     roll = instrument.get_piano_roll(fs=16)
                     trimmed = utils.trim_roll(roll)
                     pitches, _ = utils.split_roll(trimmed)
-
-                    print(pitches[-32:])
-
-                    print("Generating melody")
                     input_sequence = torch.tensor([pitches[-32:]]).to(device)
-                    melody = predict_cnn(
-                        model, input_sequence, sequence_length=64)
 
-                    # melody = predict_seq2seq(
-                    #     encoder, decoder, input_sequence, sequence_length=64)
+                    print(input_sequence)
+
+                    # Generate melody
+                    print("Generating melody")
+                    if msg.note == 105:
+                        melody = predict_cnn(
+                            cnn, input_sequence, sequence_length=64)
+                    if msg.note == 106:
+                        melody = predict_lstm(
+                            lstm, input_sequence, sequence_length=64)
+                    if msg.note == 107:
+                        melody = predict_gru(
+                            gru, input_sequence, sequence_length=64)
+                    if msg.note == 108:
+                        melody = predict_seq2seq(
+                            encoder, decoder, input_sequence, sequence_length=64)
 
                     print(melody)
 
