@@ -10,28 +10,22 @@ def predict_seq2seq(encoder, decoder, input_sequence, sequence_length=64):
     # Prime hidden state with input sequence
     for note in input_sequence[0]:
         note = note.unsqueeze(0).unsqueeze(0)
-        output, hidden_state = encoder(note, hidden_state)
+        encoder_output, hidden_state = encoder(note, hidden_state)
 
-    # Last predicted note from prime ^
-    output = torch.functional.F.softmax(output, dim=0)
-    predicted_note = torch.distributions.Categorical(output).sample()
-
-    # Shift sequence and replace oldest note with prediction
-    input_sequence = torch.roll(input_sequence, shifts=-1, dims=1)
-    input_sequence[0][-1] = predicted_note.item()
+    # Use input sequence tensor to avoid allocating another tensor
+    input_sequence[0][0] = 0
 
     # Generate sequence
     for _ in range(sequence_length):
         # Pass most recent note to model
-        input_note = input_sequence[0][-1].unsqueeze(0).unsqueeze(0)
-        output, hidden_state = decoder(input_note, hidden_state)
+        decoder_output, hidden_state = decoder(
+            input_sequence[0][0].unsqueeze(0).unsqueeze(0), hidden_state)
 
-        output = torch.functional.F.softmax(torch.squeeze(output), dim=0)
+        output = torch.functional.F.softmax(
+            torch.squeeze(decoder_output), dim=0)
         note = torch.distributions.Categorical(output).sample()
 
-        # Shift sequence and replace oldest note with prediction
-        input_sequence = torch.roll(input_sequence, shifts=-1, dims=1)
-        input_sequence[0][-1] = note.item()
+        input_sequence[0][0] = note.item()
         melody.append(note.item())
 
     return melody

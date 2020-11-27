@@ -53,10 +53,14 @@ for i in range(epochs):
         hidden_state = encoder.init_hidden(inputs.size()[0])
 
         inputs = inputs.to(device)
-        targets = targets.to(device)
+        targets = torch.cat((targets, torch.zeros((targets.shape[0], 1))),
+                            1).long().to(device)
+
+        decoder_inputs = torch.roll(
+            targets, shifts=1, dims=1).long().to(device)
 
         encoder_output, hidden_state = encoder(inputs, hidden_state)
-        decoder_output, hidden_state = decoder(inputs, hidden_state)
+        decoder_output, hidden_state = decoder(decoder_inputs, hidden_state)
 
         # Loss function expects (batch_size, feature_dim, sequence_length)
         decoder_output = decoder_output.permute(0, 2, 1)
@@ -79,10 +83,15 @@ for i in range(epochs):
             hidden_state = encoder.init_hidden(inputs.size()[0])
 
             inputs = inputs.to(device)
-            targets = targets.to(device)
+            targets = torch.cat(
+                (targets, torch.zeros((targets.shape[0], 1))), 1).long().to(device)
+
+            decoder_inputs = torch.roll(
+                targets, shifts=1, dims=1).long().to(device)
 
             encoder_output, hidden_state = encoder(inputs, hidden_state)
-            decoder_output, hidden_state = decoder(inputs, hidden_state)
+            decoder_output, hidden_state = decoder(
+                decoder_inputs, hidden_state)
 
             # Loss function expects (batch_size, feature_dim, sequence_length)
             decoder_output = decoder_output.permute(0, 2, 1)

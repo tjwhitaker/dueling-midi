@@ -21,9 +21,9 @@ note_start = 0
 # TODO: Better way to generate sequence of notes.
 instrument = pretty_midi.Instrument(2)
 
-print("Setting up the model")
+print("Setting up the models")
 
-# Setting up the model
+# Setting up the models
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 lstm = NoteLSTM().to(device)
