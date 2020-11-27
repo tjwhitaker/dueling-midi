@@ -49,7 +49,7 @@ decoder.eval()
 
 print("Opening midi ports")
 
-triggers = [105, 106, 107, 108]
+triggers = [103, 105, 107, 108]
 
 with mido.open_output(port_name) as outport:
     with mido.open_input(port_name) as inport:
@@ -74,16 +74,20 @@ with mido.open_output(port_name) as outport:
 
                     # Generate melody
                     print("Generating melody")
-                    if msg.note == 105:
+                    if msg.note == 103:
+                        print("Using CNN")
                         melody = predict_cnn(
                             cnn, input_sequence, sequence_length=64)
-                    if msg.note == 106:
+                    if msg.note == 105:
+                        print("Using LSTM")
                         melody = predict_lstm(
                             lstm, input_sequence, sequence_length=64)
                     if msg.note == 107:
+                        print("Using GRU")
                         melody = predict_gru(
                             gru, input_sequence, sequence_length=64)
                     if msg.note == 108:
+                        print("Using Encoder/Decoder LSTM")
                         melody = predict_seq2seq(
                             encoder, decoder, input_sequence, sequence_length=64)
 
