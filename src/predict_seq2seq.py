@@ -12,7 +12,8 @@ def predict_seq2seq(encoder, decoder, input_sequence, sequence_length=64):
         note = note.unsqueeze(0).unsqueeze(0)
         encoder_output, hidden_state = encoder(note, hidden_state)
 
-    # Use input sequence tensor to avoid allocating another tensor
+    # Use input sequence tensor for decoder input
+    # to avoid allocating another tensor
     input_sequence[0][0] = 0
 
     # Generate sequence

@@ -97,6 +97,8 @@ with mido.open_output(port_name) as outport:
                     previous_note = None
 
                     for note in melody:
+                        time.sleep(1./16)
+
                         if previous_note == None:
                             if note != 0:
                                 outport.send(mido.Message(
@@ -112,7 +114,6 @@ with mido.open_output(port_name) as outport:
                                     type="note_on", note=note))
 
                         previous_note = note
-                        time.sleep(1./16)
 
                     outport.send(mido.Message(
                         type="note_off", note=previous_note))
