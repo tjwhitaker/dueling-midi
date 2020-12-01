@@ -1,143 +1,136 @@
-import numpy as np
+from predict_lstm import predict_lstm
+from predict_seq2seq import predict_seq2seq
+from predict_gru import predict_gru
+from predict_cnn import predict_cnn
+from models import NoteLSTM, NoteGRU, NoteCNN, Encoder, Decoder
 import torch
-from models import NoteLSTM
 import utils
-import rtmidi
 import time
+import pretty_midi
+import mido
 
-# sequence_length = 64
-# num_pitches = 128
-# hidden_size = 256
-# hidden_layers = 2
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Params for midi streaming
+port_name = "USB Midi:USB Midi MIDI 1 28:0"
+note_buffer = []
+start_time = time.time()
+wallclock = 0
+note_start = 0
 
-# print(device)
+# Pretty midi for piano roll
+# Probably a good place to improve performance.
+# TODO: Better way to generate sequence of notes.
+instrument = pretty_midi.Instrument(2)
 
-# # Load model
-# model = NoteLSTM().to(device)
+print("Setting up the models")
 
-# model.load_state_dict(torch.load("../models/notelstm.model"))
-# model.eval()
+# Setting up the models
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# training_set = utils.get_training_set(sequence_length)
-# input_sequence = torch.tensor(training_set[0][0]).to(device)
+lstm = NoteLSTM().to(device)
+lstm.load_state_dict(torch.load("../models/notelstm.model"))
+lstm.eval()
 
+gru = NoteGRU().to(device)
+gru.load_state_dict(torch.load("../models/notegru.model"))
+gru.eval()
 
-# # TODO: get input sequence (rtmidi)
+cnn = NoteCNN().to(device)
+cnn.load_state_dict(torch.load("../models/notecnn.model"))
+cnn.eval()
 
-# # Process melody into format for midi?
-# # Piano roll, or midi messages?
+encoder = Encoder().to(device)
+decoder = Decoder().to(device)
 
-# ########################################
-# # TODO: Clean this up. Generate a melody.
-# batch_size = 1
-# hidden_state = model.init_hidden(batch_size)
-# melody = []
+encoder.load_state_dict(torch.load("../models/encoder.model"))
+decoder.load_state_dict(torch.load("../models/decoder.model"))
 
-# # Prime hidden state with input sequence
-# for note in input_sequence:
-#     note = note.unsqueeze(0).unsqueeze(0)
-#     output, hidden_state = model(note, hidden_state)
+encoder.eval()
+decoder.eval()
 
-# # Last predicted note from prime ^
-# output = torch.functional.F.softmax(output, dim=0)
-# predicted_note = torch.distributions.Categorical(output).sample()
+print("Opening midi ports")
 
-# input_note = torch.tensor([[predicted_note]]).to(device)
+triggers = [103, 105, 107, 108]
 
-# # Generate sequence
-# for _ in range(sequence_length):
-#     output, hidden_state = model(input_note, hidden_state)
+with mido.open_output(port_name) as outport:
+    with mido.open_input(port_name) as inport:
+        for msg in inport:
+            print(msg)
 
-#     output = torch.functional.F.softmax(torch.squeeze(output), dim=0)
-#     note = torch.distributions.Categorical(output).sample()
+            wallclock = time.time() - start_time
 
-#     input_note[0][0] = note.item()
-#     melody.append(note.item())
+            if msg.type == "note_on":
+                note_start = wallclock
+            if msg.type == "note_off":
+                # Trigger neural network
+                if msg.note in triggers:
+                    # Build input
+                    print("Getting conditional input")
+                    roll = instrument.get_piano_roll(fs=16)
+                    trimmed = utils.trim_roll(roll)
+                    pitches, _ = utils.split_roll(trimmed)
+                    input_sequence = torch.tensor([pitches[-64:]]).to(device)
 
-# print(input_sequence)
-# print(melody)
-# ##########################################
+                    print(input_sequence)
 
-# # TODO: Send melody to midi device
-# midiout = rtmidi.MidiOut()
-# available_ports = midiout.get_ports()
+                    # Generate melody
+                    print("Generating melody")
+                    if msg.note == 103:
+                        print("Using CNN")
+                        if len(pitches[-32:]) == 32:
+                            input_sequence = torch.tensor([pitches[-32:]]).to(device)
+                            melody = predict_cnn(
+                                cnn, input_sequence, sequence_length=64)
+                        else:
+                            print("Not enough input for cnn")
+                    if msg.note == 105:
+                        print("Using LSTM")
+                        melody = predict_lstm(
+                            lstm, input_sequence, sequence_length=64)
+                    if msg.note == 107:
+                        print("Using GRU")
+                        melody = predict_gru(
+                            gru, input_sequence, sequence_length=64)
+                    if msg.note == 108:
+                        print("Using Encoder/Decoder LSTM")
+                        melody = predict_seq2seq(
+                            encoder, decoder, input_sequence, sequence_length=64)
 
-# print(available_ports)
+                    print(melody)
 
-# if available_ports:
-#     midiout.open_port(5)
-# else:
-#     midiout.open_virtual_port("My virtual output")
+                    # Play melody
+                    previous_note = None
 
-# with midiout:
-#     for note in input_sequence:
-#         note_on = [0x90, note, 112]
-#         note_off = [0x80, note, 0]
+                    # Sustain Pedal
+#                   outport.send(mido.Message(type="control_change", control=64, value=0))
+#                   outport.send(mido.Message(type="control_change", control=64, value=127))
 
-#         if note == 0:
-#             note_on = [0x90, note, 0]
+                    for note in melody:
+                        if previous_note == None:
+                            if note != 0:
+                                outport.send(mido.Message(
+                                    type="note_on", note=note, velocity=75))
 
-#         midiout.send_message(note_on)
-#         time.sleep(0.05)
-#         midiout.send_message(note_off)
+                        elif note != previous_note:
+                            if previous_note != 0:
+                                outport.send(mido.Message(
+                                    type="note_off", note=previous_note))
 
-#     time.sleep(0.5)
+                            if note != 0:
+                                outport.send(mido.Message(
+                                    type="note_on", note=note, velocity=75))
 
-#     for note in melody:
-#         note_on = [0x90, note, 112]
-#         note_off = [0x80, note, 0]
+                        previous_note = note
+                        time.sleep(1./16)
 
-#         if note == 0:
-#             note_on = [0x90, note, 0]
+                    outport.send(mido.Message(
+                        type="note_off", note=previous_note))
 
-#         midiout.send_message(note_on)
-#         time.sleep(0.05)
-#         midiout.send_message(note_off)
+                    # Clear buffer
+                    print("Clearing note buffer")
+                    instrument.notes = []
 
-# del midiout
-
-from rtmidi.utils import open_midioutput, open_midiinput
-
-if __name__ == "__main__":
-    # Set up model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    model = NoteLSTM().to(device)
-    model.load_state_dict(torch.load("../models/notelstm.model"))
-    model.eval()
-
-    # Open midi ports/callbacks
-    midi_port = 5
-
-    try:
-        midi_in, port_name = open_midiinput(midi_port)
-        midi_out, port_name = open_midioutput(midi_port)
-
-        midi_in.set_callback(MidiInputHandler(port_name))
-
-    except (EOFError, KeyboardInterrupt):
-        print("Exit.")
-
-    finally:
-        midi_in.close_port()
-        midi_out.close_port()
-
-        del midi_in, midi_out
-
-    print("Attaching MIDI input callback handler.")
-    midiin.set_callback(MidiInputHandler(port_name))
-
-    print("Entering main loop. Press Control-C to exit.")
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print('')
-    finally:
-        print("Exit.")
-        midiin.close_port()
-        del midiin
-
-    open_midi_input(model)
-    open_midi_output()
+                else:
+                    note_end = wallclock
+                    note = pretty_midi.Note(
+                        start=note_start, end=note_end, pitch=msg.note, velocity=100)
+                    instrument.notes.append(note)
