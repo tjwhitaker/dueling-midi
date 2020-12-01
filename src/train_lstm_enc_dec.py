@@ -1,7 +1,8 @@
 import numpy as np
 import torch
-from models import Encoder, Decoder
+from models import LSTMEncoder, LSTMDecoder
 import utils
+from time import time
 
 epochs = 20
 sequence_length = 32
@@ -13,8 +14,8 @@ batch_size = 32
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-encoder = Encoder().to(device)
-decoder = Decoder().to(device)
+encoder = LSTMEncoder().to(device)
+decoder = LSTMDecoder().to(device)
 
 dataset = utils.get_training_set(sequence_length)
 
@@ -37,8 +38,11 @@ criterion = torch.nn.CrossEntropyLoss()
 encoder_optimizer = torch.optim.Adam(encoder.parameters())
 decoder_optimizer = torch.optim.Adam(decoder.parameters())
 
+epoch_times = []
 
 for i in range(epochs):
+    start_time = time()
+
     print(f"EPOCH {i}")
     print("------------------------")
 
@@ -102,6 +106,10 @@ for i in range(epochs):
     print(f"Train Loss: {train_loss}")
     print(f"Test Loss: {test_loss}\n")
 
+    epoch_times.append(time() - start_time)
+
 # Save model
-torch.save(encoder.state_dict(), "../models/encoder.model")
-torch.save(decoder.state_dict(), "../models/decoder.model")
+torch.save(encoder.state_dict(), "../models/lstmencoder.model")
+torch.save(decoder.state_dict(), "../models/lstmdecoder.model")
+
+print(epoch_times)

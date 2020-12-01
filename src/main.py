@@ -1,8 +1,9 @@
 from predict_lstm import predict_lstm
-from predict_seq2seq import predict_seq2seq
 from predict_gru import predict_gru
 from predict_cnn import predict_cnn
-from models import NoteLSTM, NoteGRU, NoteCNN, Encoder, Decoder
+from predict_lstm_enc_dec import predict_lstm_enc_dec
+from predict_gru_enc_dec import predict_gru_enc_dec
+from models import LSTM, GRU, CNN, LSTMEncoder, LSTMDecoder, GRUEncoder, GRUDecoder
 import torch
 import utils
 import time
@@ -26,30 +27,39 @@ print("Setting up the models")
 # Setting up the models
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-lstm = NoteLSTM().to(device)
-lstm.load_state_dict(torch.load("../models/notelstm.model"))
+lstm = LSTM().to(device)
+lstm.load_state_dict(torch.load("../models/lstm.model"))
 lstm.eval()
 
-gru = NoteGRU().to(device)
-gru.load_state_dict(torch.load("../models/notegru.model"))
+gru = GRU().to(device)
+gru.load_state_dict(torch.load("../models/gru.model"))
 gru.eval()
 
-cnn = NoteCNN().to(device)
-cnn.load_state_dict(torch.load("../models/notecnn.model"))
+cnn = CNN().to(device)
+cnn.load_state_dict(torch.load("../models/cnn.model"))
 cnn.eval()
 
-encoder = Encoder().to(device)
-decoder = Decoder().to(device)
+lstmencoder = LSTMEncoder().to(device)
+lstmdecoder = LSTMDecoder().to(device)
 
-encoder.load_state_dict(torch.load("../models/encoder.model"))
-decoder.load_state_dict(torch.load("../models/decoder.model"))
+lstmencoder.load_state_dict(torch.load("../models/lstmencoder.model"))
+lstmdecoder.load_state_dict(torch.load("../models/lstmdecoder.model"))
 
-encoder.eval()
-decoder.eval()
+lstmencoder.eval()
+lstmdecoder.eval()
+
+gruencoder = GRUEncoder().to(device)
+grudecoder = GRUDecoder().to(device)
+
+gruencoder.load_state_dict(torch.load("../models/gruencoder.model"))
+grudecoder.load_state_dict(torch.load("../models/grudecoder.model"))
+
+gruencoder.eval()
+grudecoder.eval()
 
 print("Opening midi ports")
 
-triggers = [103, 105, 107, 108]
+triggers = [101, 103, 105, 107, 108]
 
 with mido.open_output(port_name) as outport:
     with mido.open_input(port_name) as inport:
@@ -74,27 +84,31 @@ with mido.open_output(port_name) as outport:
 
                     # Generate melody
                     print("Generating melody")
-                    if msg.note == 103:
+                    if msg.note == 101:
                         print("Using CNN")
                         if len(pitches[-32:]) == 32:
                             input_sequence = torch.tensor(
                                 [pitches[-32:]]).to(device)
                             melody = predict_cnn(
-                                cnn, input_sequence, sequence_length=64)
+                                cnn, input_sequence, sequence_length=32)
                         else:
                             print("Not enough input for cnn")
-                    if msg.note == 105:
+                    if msg.note == 103:
                         print("Using LSTM")
                         melody = predict_lstm(
-                            lstm, input_sequence, sequence_length=64)
-                    if msg.note == 107:
+                            lstm, input_sequence, sequence_length=32)
+                    if msg.note == 105:
                         print("Using GRU")
                         melody = predict_gru(
-                            gru, input_sequence, sequence_length=64)
-                    if msg.note == 108:
+                            gru, input_sequence, sequence_length=32)
+                    if msg.note == 107:
                         print("Using Encoder/Decoder LSTM")
-                        melody = predict_seq2seq(
-                            encoder, decoder, input_sequence, sequence_length=64)
+                        melody = predict_lstm_enc_dec(
+                            lstmencoder, lstmdecoder, input_sequence, sequence_length=32)
+                    if msg.note == 108:
+                        print("Using Encoder/Decoder GRU")
+                        melody = predict_gru_enc_dec(
+                            gruencoder, grudecoder, input_sequence, sequence_length=32)
 
                     print(melody)
 
@@ -106,6 +120,7 @@ with mido.open_output(port_name) as outport:
 #                   outport.send(mido.Message(type="control_change", control=64, value=127))
 
                     for note in melody:
+                        time.sleep(1./8)
                         if previous_note == None:
                             if note != 0:
                                 outport.send(mido.Message(
@@ -121,7 +136,6 @@ with mido.open_output(port_name) as outport:
                                     type="note_on", note=note, velocity=75))
 
                         previous_note = note
-                        time.sleep(1./16)
 
                     outport.send(mido.Message(
                         type="note_off", note=previous_note))

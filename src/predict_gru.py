@@ -1,6 +1,7 @@
 import torch
-from models import NoteGRU
+from models import GRU
 import utils
+from time import time
 
 
 def predict_gru(model, input_sequence, sequence_length=64):
@@ -40,8 +41,8 @@ def predict_gru(model, input_sequence, sequence_length=64):
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = NoteGRU().to(device)
-    model.load_state_dict(torch.load("../models/notegru.model"))
+    model = GRU().to(device)
+    model.load_state_dict(torch.load("../models/gru.model"))
     model.eval()
 
     # input_sequence = torch.tensor([[61, 61,  0, 63,  0, 66,  0,  0, 68,  0,  0, 70,  0,  0,  0,  0, 66, 66, 66,  0,  0, 63, 63, 63,
@@ -51,7 +52,10 @@ if __name__ == "__main__":
     training_set = utils.get_training_set(sequence_length=32)
     input_sequence = torch.tensor(training_set[0][0]).unsqueeze(0).to(device)
 
-    melody = predict_gru(model, input_sequence, sequence_length=64)
+    times = []
+    for i in range(100):
+        start = time()
+        melody = predict_gru(model, input_sequence, sequence_length=64)
+        times.append(time() - start)
 
-    print(input_sequence)
-    print(melody)
+    print(times)

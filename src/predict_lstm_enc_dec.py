@@ -1,9 +1,10 @@
 import torch
-from models import Encoder, Decoder
+from models import LSTMEncoder, LSTMDecoder
 import utils
+from time import time
 
 
-def predict_seq2seq(encoder, decoder, input_sequence, sequence_length=64):
+def predict_lstm_enc_dec(encoder, decoder, input_sequence, sequence_length=64):
     hidden_state = encoder.init_hidden(input_sequence.shape[0])
     melody = []
 
@@ -35,11 +36,11 @@ def predict_seq2seq(encoder, decoder, input_sequence, sequence_length=64):
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    encoder = Encoder().to(device)
-    decoder = Decoder().to(device)
+    encoder = LSTMEncoder().to(device)
+    decoder = LSTMDecoder().to(device)
 
-    encoder.load_state_dict(torch.load("../models/encoder.model"))
-    decoder.load_state_dict(torch.load("../models/decoder.model"))
+    encoder.load_state_dict(torch.load("../models/lstmencoder.model"))
+    decoder.load_state_dict(torch.load("../models/lstmdecoder.model"))
 
     encoder.eval()
     decoder.eval()
@@ -48,7 +49,12 @@ if __name__ == "__main__":
                                     63,  0,  0, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68,  0,  0,  0,  0,  0,
                                     0,  0,  0,  0,  0, 68, 68, 68, 68,  0,  0, 65, 65, 65,  0,  0]]).to(device)
 
-    melody = predict_seq2seq(encoder, decoder, input_sequence)
+    # Time model inference
+    times = []
 
-    print(melody)
-    print(len(melody))
+    for i in range(100):
+        start = time()
+        melody = predict_lstm_enc_dec(encoder, decoder, input_sequence)
+        times.append(time() - start)
+
+    print(times)

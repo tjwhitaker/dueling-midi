@@ -1,7 +1,8 @@
 import numpy as np
 import torch
-from models import NoteLSTM
+from models import LSTM
 import utils
+from time import time
 
 epochs = 20
 sequence_length = 32
@@ -13,7 +14,7 @@ batch_size = 32
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = NoteLSTM().to(device)
+model = LSTM().to(device)
 
 dataset = utils.get_training_set(sequence_length)
 
@@ -34,7 +35,11 @@ test_loader = torch.utils.data.DataLoader(
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters())
 
+epoch_times = []
+
 for i in range(epochs):
+    start_time = time()
+
     print(f"EPOCH {i}")
     print("------------------------")
 
@@ -81,5 +86,9 @@ for i in range(epochs):
     print(f"Train Loss: {train_loss}")
     print(f"Test Loss: {test_loss}\n")
 
+    epoch_times.append(time() - start_time)
+
 # Save model
-torch.save(model.state_dict(), "../models/notelstm.model")
+torch.save(model.state_dict(), "../models/lstm.model")
+
+print(epoch_times)

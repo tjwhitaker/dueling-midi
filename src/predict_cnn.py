@@ -1,6 +1,7 @@
 import torch
-from models import NoteCNN
+from models import CNN
 import utils
+from time import time
 
 
 def predict_cnn(model, input_sequence, sequence_length=64):
@@ -25,8 +26,8 @@ def predict_cnn(model, input_sequence, sequence_length=64):
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = NoteCNN().to(device)
-    model.load_state_dict(torch.load("../models/notecnn.model"))
+    model = CNN().to(device)
+    model.load_state_dict(torch.load("../models/cnn.model"))
     model.eval()
 
     input_sequence = torch.tensor([[61, 61,  0, 63,  0, 66,  0,  0, 68,  0,  0, 70,  0,  0,  0,  0, 66, 66, 66,  0,  0, 63, 63, 63,
@@ -36,7 +37,10 @@ if __name__ == "__main__":
     training_set = utils.get_training_set(sequence_length=32)
     input_sequence = torch.tensor(training_set[0][0]).unsqueeze(0).to(device)
 
-    melody = predict_cnn(model, input_sequence)
+    times = []
+    for i in range(100):
+        start = time()
+        melody = predict_cnn(model, input_sequence)
+        times.append(time() - start)
 
-    print(melody)
-    print(len(melody))
+    print(times)
