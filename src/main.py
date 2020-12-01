@@ -68,7 +68,7 @@ with mido.open_output(port_name) as outport:
                     roll = instrument.get_piano_roll(fs=16)
                     trimmed = utils.trim_roll(roll)
                     pitches, _ = utils.split_roll(trimmed)
-                    input_sequence = torch.tensor([pitches[-32:]]).to(device)
+                    input_sequence = torch.tensor([pitches[-64:]]).to(device)
 
                     print(input_sequence)
 
@@ -76,20 +76,25 @@ with mido.open_output(port_name) as outport:
                     print("Generating melody")
                     if msg.note == 103:
                         print("Using CNN")
-                        melody = predict_cnn(
-                            cnn, input_sequence, sequence_length=48)
+                        if len(pitches[-32:]) == 32:
+                            input_sequence = torch.tensor(
+                                [pitches[-32:]]).to(device)
+                            melody = predict_cnn(
+                                cnn, input_sequence, sequence_length=64)
+                        else:
+                            print("Not enough input for cnn")
                     if msg.note == 105:
                         print("Using LSTM")
                         melody = predict_lstm(
-                            lstm, input_sequence, sequence_length=48)
+                            lstm, input_sequence, sequence_length=64)
                     if msg.note == 107:
                         print("Using GRU")
                         melody = predict_gru(
-                            gru, input_sequence, sequence_length=48)
+                            gru, input_sequence, sequence_length=64)
                     if msg.note == 108:
                         print("Using Encoder/Decoder LSTM")
                         melody = predict_seq2seq(
-                            encoder, decoder, input_sequence, sequence_length=48)
+                            encoder, decoder, input_sequence, sequence_length=64)
 
                     print(melody)
 
@@ -97,16 +102,14 @@ with mido.open_output(port_name) as outport:
                     previous_note = None
 
                     # Sustain Pedal
-                    outport.send(mido.Message(type="control_change", control=64, value=0))
-                    outport.send(mido.Message(type="control_change", control=64, value=127))
+#                   outport.send(mido.Message(type="control_change", control=64, value=0))
+#                   outport.send(mido.Message(type="control_change", control=64, value=127))
 
                     for note in melody:
-                        time.sleep(1./16)
-
                         if previous_note == None:
                             if note != 0:
                                 outport.send(mido.Message(
-                                    type="note_on", note=note))
+                                    type="note_on", note=note, velocity=75))
 
                         elif note != previous_note:
                             if previous_note != 0:
@@ -115,9 +118,10 @@ with mido.open_output(port_name) as outport:
 
                             if note != 0:
                                 outport.send(mido.Message(
-                                    type="note_on", note=note))
+                                    type="note_on", note=note, velocity=75))
 
                         previous_note = note
+                        time.sleep(1./16)
 
                     outport.send(mido.Message(
                         type="note_off", note=previous_note))
