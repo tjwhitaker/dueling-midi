@@ -4,9 +4,9 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-class NoteLSTM(nn.Module):
+class LSTM(nn.Module):
     def __init__(self):
-        super(NoteLSTM, self).__init__()
+        super(LSTM, self).__init__()
 
         # 128 Valid Midi Notes
         self.input_size = 128
@@ -38,9 +38,9 @@ class NoteLSTM(nn.Module):
                 Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))
 
 
-class NoteGRU(nn.Module):
+class GRU(nn.Module):
     def __init__(self):
-        super(NoteGRU, self).__init__()
+        super(GRU, self).__init__()
 
         # 128 Valid Midi Notes
         self.input_size = 128
@@ -71,9 +71,9 @@ class NoteGRU(nn.Module):
         return Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()
 
 
-class NoteCNN(nn.Module):
+class CNN(nn.Module):
     def __init__(self):
-        super(NoteCNN, self).__init__()
+        super(CNN, self).__init__()
 
         self.sequence_length = 32
 
@@ -108,9 +108,9 @@ class NoteCNN(nn.Module):
         return logits
 
 
-class Encoder(nn.Module):
+class LSTMEncoder(nn.Module):
     def __init__(self):
-        super(Encoder, self).__init__()
+        super(LSTMEncoder, self).__init__()
 
         # 128 Valid Midi Notes
         self.input_size = 128
@@ -139,9 +139,9 @@ class Encoder(nn.Module):
                 Variable((torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()))
 
 
-class Decoder(nn.Module):
+class LSTMDecoder(nn.Module):
     def __init__(self):
-        super(Decoder, self).__init__()
+        super(LSTMDecoder, self).__init__()
 
         # 128 Valid Midi Notes
         self.input_size = 128
@@ -169,18 +169,61 @@ class Decoder(nn.Module):
         return logits, hidden_state
 
 
-# class Seq2Seq(nn.Module):
-#     def __init__(self):
-#         super(Seq2Seq, self).__init__()
+class GRUEncoder(nn.Module):
+    def __init__(self):
+        super(GRUEncoder, self).__init__()
 
-#         self.encoder = Encoder()
-#         self.decoder = Decoder()
+        # 128 Valid Midi Notes
+        self.input_size = 128
+        self.output_size = 128
 
-#     def forward(self, x, hidden_state):
-#         encoder_output, hidden_state = self.encoder(x, hidden_state)
-#         decoder_output, hidden_state = self.decoder(x, hidden_state)
+        # LSTM Hyperparams
+        self.hidden_size = 128
+        self.hidden_layers = 1
+        self.embedding_dimensions = 32
 
-#         return decoder_output, hidden_state
+        # Network Structure
+        self.embedding = nn.Embedding(
+            self.input_size, self.embedding_dimensions)
 
-#     def init_hidden(self, batch_size):
-#         return self.encoder.init_hidden(batch_size)
+        self.gru = nn.GRU(self.embedding_dimensions, self.hidden_size,
+                          self.hidden_layers, batch_first=True)
+
+    def forward(self, x, hidden_state):
+        embedding = self.embedding(x)
+        output, hidden_state = self.gru(embedding, hidden_state)
+
+        return output, hidden_state
+
+    def init_hidden(self, batch_size):
+        return Variable(torch.zeros(self.hidden_layers, batch_size, self.hidden_size)).cuda()
+
+
+class GRUDecoder(nn.Module):
+    def __init__(self):
+        super(GRUDecoder, self).__init__()
+
+        # 128 Valid Midi Notes
+        self.input_size = 128
+        self.output_size = 128
+
+        # LSTM Hyperparams
+        self.hidden_size = 128
+        self.hidden_layers = 1
+        self.embedding_dimensions = 32
+
+        # Network Structure
+        self.embedding = nn.Embedding(
+            self.input_size, self.embedding_dimensions)
+
+        self.gru = nn.GRU(self.embedding_dimensions, self.hidden_size,
+                          self.hidden_layers, batch_first=True)
+
+        self.decoder = nn.Linear(self.hidden_size, self.output_size)
+
+    def forward(self, x, hidden_state):
+        embedding = self.embedding(x)
+        output, hidden_state = self.gru(embedding, hidden_state)
+        logits = self.decoder(output)
+
+        return logits, hidden_state
