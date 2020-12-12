@@ -4,7 +4,7 @@ from models import GRU
 import utils
 from time import time
 
-epochs = 20
+epochs = 10
 sequence_length = 32
 batch_size = 32
 

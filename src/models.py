@@ -13,9 +13,9 @@ class LSTM(nn.Module):
         self.output_size = 128
 
         # LSTM Hyperparams
-        self.hidden_size = 256
-        self.hidden_layers = 1
-        self.embedding_dimensions = 4
+        self.hidden_size = 128
+        self.hidden_layers = 2
+        self.embedding_dimensions = 8
 
         # Network Structure
         self.embedding = nn.Embedding(
@@ -47,9 +47,9 @@ class GRU(nn.Module):
         self.output_size = 128
 
         # GRU Hyperparams
-        self.hidden_size = 256
-        self.hidden_layers = 1
-        self.embedding_dimensions = 4
+        self.hidden_size = 128
+        self.hidden_layers = 2
+        self.embedding_dimensions = 8
 
         # Network Structure
         self.embedding = nn.Embedding(
@@ -82,7 +82,7 @@ class CNN(nn.Module):
         self.output_size = 128
 
         # CNN Hyperparams
-        self.embedding_dimensions = 32
+        self.embedding_dimensions = 8
 
         # Network Structure
         self.embedding = nn.Embedding(
@@ -90,15 +90,18 @@ class CNN(nn.Module):
 
         self.conv_block = nn.Sequential(
             nn.Conv1d(in_channels=self.sequence_length,
-                      out_channels=32, kernel_size=3),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=32,
                       out_channels=64, kernel_size=3),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=64,
+                      out_channels=128, kernel_size=3),
+            nn.ReLU(),
+            nn.Conv1d(in_channels=128,
+                      out_channels=256, kernel_size=3),
             nn.ReLU(),
             nn.Flatten()
         )
 
-        self.decoder = nn.Linear(896*2, self.output_size)
+        self.decoder = nn.Linear(512, self.output_size)
 
     def forward(self, x):
         embedding = self.embedding(x)
@@ -119,7 +122,7 @@ class LSTMEncoder(nn.Module):
         # LSTM Hyperparams
         self.hidden_size = 128
         self.hidden_layers = 1
-        self.embedding_dimensions = 32
+        self.embedding_dimensions = 8
 
         # Network Structure
         self.embedding = nn.Embedding(
@@ -150,7 +153,7 @@ class LSTMDecoder(nn.Module):
         # LSTM Hyperparams
         self.hidden_size = 128
         self.hidden_layers = 1
-        self.embedding_dimensions = 32
+        self.embedding_dimensions = 8
 
         # Network Structure
         self.embedding = nn.Embedding(
@@ -180,7 +183,7 @@ class GRUEncoder(nn.Module):
         # LSTM Hyperparams
         self.hidden_size = 128
         self.hidden_layers = 1
-        self.embedding_dimensions = 32
+        self.embedding_dimensions = 8
 
         # Network Structure
         self.embedding = nn.Embedding(
@@ -210,7 +213,7 @@ class GRUDecoder(nn.Module):
         # LSTM Hyperparams
         self.hidden_size = 128
         self.hidden_layers = 1
-        self.embedding_dimensions = 32
+        self.embedding_dimensions = 8
 
         # Network Structure
         self.embedding = nn.Embedding(

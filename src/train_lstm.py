@@ -4,7 +4,7 @@ from models import LSTM
 import utils
 from time import time
 
-epochs = 20
+epochs = 10
 sequence_length = 32
 batch_size = 32
 

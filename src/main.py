@@ -78,7 +78,7 @@ with mido.open_output(port_name) as outport:
                     roll = instrument.get_piano_roll(fs=16)
                     trimmed = utils.trim_roll(roll)
                     pitches, _ = utils.split_roll(trimmed)
-                    input_sequence = torch.tensor([pitches[-64:]]).to(device)
+                    input_sequence = torch.tensor([pitches[-32:]]).to(device)
 
                     print(input_sequence)
 
@@ -90,25 +90,25 @@ with mido.open_output(port_name) as outport:
                             input_sequence = torch.tensor(
                                 [pitches[-32:]]).to(device)
                             melody = predict_cnn(
-                                cnn, input_sequence, sequence_length=32)
+                                cnn, input_sequence, sequence_length=64)
                         else:
                             print("Not enough input for cnn")
                     if msg.note == 103:
                         print("Using LSTM")
                         melody = predict_lstm(
-                            lstm, input_sequence, sequence_length=32)
+                            lstm, input_sequence, sequence_length=64)
                     if msg.note == 105:
                         print("Using GRU")
                         melody = predict_gru(
-                            gru, input_sequence, sequence_length=32)
+                            gru, input_sequence, sequence_length=64)
                     if msg.note == 107:
                         print("Using Encoder/Decoder LSTM")
                         melody = predict_lstm_enc_dec(
-                            lstmencoder, lstmdecoder, input_sequence, sequence_length=32)
+                            lstmencoder, lstmdecoder, input_sequence, sequence_length=64)
                     if msg.note == 108:
                         print("Using Encoder/Decoder GRU")
                         melody = predict_gru_enc_dec(
-                            gruencoder, grudecoder, input_sequence, sequence_length=32)
+                            gruencoder, grudecoder, input_sequence, sequence_length=64)
 
                     print(melody)
 
@@ -120,7 +120,7 @@ with mido.open_output(port_name) as outport:
 #                   outport.send(mido.Message(type="control_change", control=64, value=127))
 
                     for note in melody:
-                        time.sleep(1./8)
+                        time.sleep(1./16)
                         if previous_note == None:
                             if note != 0:
                                 outport.send(mido.Message(
@@ -147,5 +147,5 @@ with mido.open_output(port_name) as outport:
                 else:
                     note_end = wallclock
                     note = pretty_midi.Note(
-                        start=note_start, end=note_end, pitch=msg.note, velocity=100)
+                        start=note_start, end=note_end, pitch=msg.note, velocity=75)
                     instrument.notes.append(note)
